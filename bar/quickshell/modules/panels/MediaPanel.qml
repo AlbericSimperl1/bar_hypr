@@ -45,8 +45,8 @@ Item {
 
     readonly property bool hasPlayer: activePlayer !== null
     readonly property bool isPlaying: hasPlayer && activePlayer.isPlaying
-    readonly property string trackTitle: hasPlayer && activePlayer.trackTitle ? activePlayer.trackTitle : "Geen nummer"
-    readonly property string trackArtist: hasPlayer && activePlayer.trackArtist ? activePlayer.trackArtist : "Onbekende artiest"
+    readonly property string trackTitle: hasPlayer && activePlayer.trackTitle ? activePlayer.trackTitle : "No media playing"
+    readonly property string trackArtist: hasPlayer && activePlayer.trackArtist ? activePlayer.trackArtist : "Unknown or no artist"
     readonly property string artUrl: hasPlayer && activePlayer.trackArtUrl ? activePlayer.trackArtUrl : ""
     readonly property real trackLength: hasPlayer && activePlayer.lengthSupported ? Math.max(0, activePlayer.length) : 0
     readonly property bool canSeek: hasPlayer && activePlayer.canSeek && trackLength > 0
@@ -255,16 +255,33 @@ Item {
 
             // Knoppenbalk (Apple-style: grote, strakke iconen zonder achtergrond)
             RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 50
+                Layout.alignment: Qt.AlignLeft
+                spacing: 0
 
+                // Shuffle
+                Text {
+                    text: "\uf074"
+                    color: (root.activePlayer && root.activePlayer.shuffle) ? root.accentColor : "#888888"
+                    opacity: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported) ? 1 : 0.35
+                    font.family: root.fontFamily
+                    font.pixelSize: 50
+                    Layout.alignment: Qt.AlignVCenter
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: if (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported)
+                            root.activePlayer.shuffle = !root.activePlayer.shuffle
+                    }
+                }
                 // Vorige nummer
                 Text {
                     text: "\uf048"
                     color: root.fgColor
                     font.family: root.fontFamily
-                    font.pixelSize: 80
+                    font.pixelSize: 85
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: 35
 
                     MouseArea {
                         anchors.fill: parent
@@ -279,8 +296,9 @@ Item {
                     text: root.isPlaying ? "\uf04c" : "\uf04b"
                     color: root.fgColor
                     font.family: root.fontFamily
-                    font.pixelSize: 90
+                    font.pixelSize: 100
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: 35
 
                     MouseArea {
                         anchors.fill: parent
@@ -295,14 +313,55 @@ Item {
                     text: "\uf051"
                     color: root.fgColor
                     font.family: root.fontFamily
-                    font.pixelSize: 80
+                    font.pixelSize: 85
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: 35
+                    Layout.rightMargin: 45
 
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: if (root.activePlayer)
                             root.activePlayer.next()
+                    }
+                }
+
+                // Herhalen
+                Text {
+                    text: "\uf01e"
+                    color: (root.activePlayer && root.activePlayer.loopState !== MprisLoopState.None) ? root.accentColor : "#888888"
+                    opacity: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.loopSupported) ? 1 : 0.35
+                    font.family: root.fontFamily
+                    font.pixelSize: 50
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: 0
+
+                    Text {
+                        text: "1"
+                        visible: root.activePlayer && root.activePlayer.loopState === MprisLoopState.Track
+                        color: root.accentColor
+                        font.family: root.fontFamily
+                        font.pixelSize: 15
+                        font.bold: true
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.rightMargin: -4
+                        anchors.bottomMargin: 5
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.loopSupported) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: {
+                            if (!root.activePlayer || !root.activePlayer.canControl || !root.activePlayer.loopSupported)
+                                return;
+                            if (root.activePlayer.loopState === MprisLoopState.None)
+                                root.activePlayer.loopState = MprisLoopState.Playlist;
+                            else if (root.activePlayer.loopState === MprisLoopState.Playlist)
+                                root.activePlayer.loopState = MprisLoopState.Track;
+                            else
+                                root.activePlayer.loopState = MprisLoopState.None;
+                        }
                     }
                 }
             }
