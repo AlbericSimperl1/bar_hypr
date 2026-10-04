@@ -2,6 +2,8 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Mpris
 import Quickshell.Wayland
 import "./modules"
@@ -13,17 +15,39 @@ import "./modules/services"
 ShellRoot {
     id: root
 
-    readonly property color barBg: '#60000207'
+    // Zichtbaarheid van de sidebar
+    property bool overviewActive: false
+
+    // Ontvang expliciete status-updates via IPC
+    IpcHandler {
+        target: "overview"
+
+        function toggle(): void {
+            root.overviewActive = !root.overviewActive;
+        }
+
+        function open(): void {
+            root.overviewActive = true;
+        }
+
+        function close(): void {
+            root.overviewActive = false;
+        }
+    }
+
+    readonly property color barBg: '#00000207'
     readonly property color fg: '#fff7e5'
     readonly property color accent: '#ebd9b9'
     readonly property color borderCol: "#2cffffff"
     readonly property string fontFamily: "mononoki"
 
-    readonly property int sidebarWidth: 24
+    readonly property int sidebarWidth: 34
     readonly property int marginSize: 0
     readonly property int barRadius: 0
 
     readonly property int panelMaxWidth: 480
+    readonly property color panelBg: '#60000207'
+
     readonly property int panelMaxHeight: 650
     readonly property int panelMinHeight: 140
     readonly property int panelGap: 8
@@ -49,7 +73,7 @@ ShellRoot {
 
         PanelWindow {
             id: sidebarPanel
-            visible: !Hyprland.overviewActive
+            visible: root.overviewActive
             required property var modelData
 
             property bool popoutOpen: false
@@ -59,8 +83,14 @@ ShellRoot {
             readonly property real openP: popoutOpen ? 1 : 0
             property real panelTopY: 120
 
-            // Hoogteberekening uitgebreid met wifi
-            readonly property real contentNeededHeight: activePanel === "media" ? mediaPanel.implicitHeight : activePanel === "bluetooth" ? bluetoothPanel.neededHeight : activePanel === "notifications" ? notificationPanel.neededHeight : activePanel === "wifi" ? wifiPanel.neededHeight : activePanel === "power" ? powerPanel.neededHeight : 0 // <- Toegevoegd
+            onVisibleChanged: {
+                if (!visible) {
+                    popoutOpen = false;
+                    activePanel = "none";
+                }
+            }
+
+            readonly property real contentNeededHeight: activePanel === "media" ? mediaPanel.implicitHeight : activePanel === "bluetooth" ? bluetoothPanel.neededHeight : activePanel === "notifications" ? notificationPanel.neededHeight : activePanel === "wifi" ? wifiPanel.neededHeight : activePanel === "power" ? powerPanel.neededHeight : 0
             readonly property real panelH: Math.min(root.panelMaxHeight, Math.max(root.panelMinHeight, contentNeededHeight + 16))
 
             onPanelHChanged: {
@@ -72,7 +102,7 @@ ShellRoot {
             }
 
             screen: modelData
-            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
             color: "transparent"
 
@@ -182,7 +212,7 @@ ShellRoot {
                         y: sidebarPanel.panelTopY
                         width: root.panelMaxWidth
                         height: sidebarPanel.panelH
-                        color: root.barBg
+                        color: root.panelBg
                         radius: root.panelRadius
                         border.color: root.borderCol
                         border.width: 0
@@ -229,7 +259,6 @@ ShellRoot {
                                 fontFamily: root.fontFamily
                             }
 
-                            // Nieuw PowerPanel invoegen:
                             PowerPanel {
                                 id: powerPanel
                                 anchors.fill: parent

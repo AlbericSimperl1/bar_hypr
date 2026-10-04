@@ -39,7 +39,7 @@ Item {
         text: brightnessWidgetRoot.icon
         color: brightnessWidgetRoot.nightlightActive ? brightnessWidgetRoot.accentColor : brightnessWidgetRoot.fgColor
         font.family: brightnessWidgetRoot.fontFamily
-        font.pixelSize: 23
+        font.pixelSize: 28
 
         Behavior on color {
             ColorAnimation {

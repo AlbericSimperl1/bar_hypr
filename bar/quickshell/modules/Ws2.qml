@@ -6,7 +6,8 @@ import Quickshell.Io
 
 ColumnLayout {
     id: wsColumn
-    spacing: 6
+    spacing: 8
+
     Layout.alignment: Qt.AlignHCenter
 
     // 10 workspaces (1 t/m 9 en 0) zoals op de afbeelding
@@ -35,19 +36,19 @@ ColumnLayout {
             property bool hovered: false
 
             // Vierkante afgeronde knopjes
-            implicitWidth: 18
-            implicitHeight: 22
+            implicitWidth: 22
+            implicitHeight: 26
             radius: 6
 
             Layout.alignment: Qt.AlignHCenter
 
             color: {
                 if (isActive) {
-                    return Qt.rgba(0, 0, 0, 0.50); // Actieve achtergrond
+                    return Qt.rgba(255, 255, 255, 0.25); // Actieve achtergrond
                 } else if (hovered) {
-                    return Qt.rgba(0, 0, 0, 0.35);
+                    return Qt.rgba(255, 255, 255, 0.17);
                 } else if (hasWindows) {
-                    return Qt.rgba(0, 0, 0, 0.20); // Achtergrond voor geopende vensters
+                    return Qt.rgba(255, 255, 255, 0.12); // Achtergrond voor geopende vensters
                 } else {
                     return "transparent"; // Geen box voor lege workspaces
                 }
@@ -63,7 +64,7 @@ ColumnLayout {
             Text {
                 anchors.centerIn: parent
                 text: pill.displayText
-                font.pixelSize: 13
+                font.pixelSize: 18
                 // font.bold: true
 
                 color: {
