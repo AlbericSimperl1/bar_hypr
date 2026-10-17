@@ -1,0 +1,22 @@
+singleton Config 1.0 Config.qml
+singleton BarState 1.0 BarState.qml
+singleton WidgetRegistry 1.0 WidgetRegistry.qml
+singleton Notifications 1.0 Notifications.qml
+singleton Wifi 1.0 Wifi.qml
+
+BarContent 1.0 BarContent.qml
+BatteryWidget 1.0 BatteryWidget.qml
+BluetoothPanel2 1.0 BluetoothPanel2.qml
+Brightness 1.0 Brightness.qml
+BrightnessPanel 1.0 BrightnessPanel.qml
+Clock 1.0 Clock.qml
+CpuRamWidget 1.0 CpuRamWidget.qml
+MediaPanel 1.0 MediaPanel.qml
+MediaWidget 1.0 MediaWidget.qml
+NotificationPanel 1.0 NotificationPanel.qml
+NotificationToast 1.0 NotificationToast.qml
+PowerPanel 1.0 PowerPanel.qml
+SettingsPanel 1.0 SettingsPanel.qml
+VolumeWidget 1.0 VolumeWidget.qml
+WifiPanel 1.0 WifiPanel.qml
+Ws 1.0 Ws.qml

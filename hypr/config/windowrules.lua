@@ -154,19 +154,13 @@ hl.layer_rule({
     ignore_alpha = 0.1,
     no_anim = true
 })
+
+
 hl.layer_rule({
-    match = { namespace = "ghostty" },
+    name = "rust-launcher-blur",
+    match = { namespace = "^rust-launcher$" },
     blur = true,
+    blur_popups = true,
     ignore_alpha = 0.1,
-    no_anim = true
+    -- dim_around = true
 })
-local calendar_class = "rencal" -- Vervang door de class uit `hyprctl activewindow`
-
-local windowrulev2 = {
-    match = { namespace = "rencal" },
-    float = true
-}
-
-return {
-    windowrulev2 = windowrulev2,
-}

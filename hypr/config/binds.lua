@@ -49,48 +49,6 @@ end
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag())
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize())
 
--- hl.bind(mainMod .. " + W", function() hl.plugin.overview.toggle() end)
-
--- local last_super_press = 0
--- local double_tap_window = 0.01
--- local overview_is_open = false
-
--- hl.bind("Super_L", function()
---     local current_time = os.clock()
---
---     if (current_time - last_super_press) < double_tap_window then
---         -- Toggle Hyprspace overview
---         hl.plugin.overview.toggle()
---
---         -- Update status & stuur expliciet 'open' of 'close' naar Quickshell
---         overview_is_open = not overview_is_open
---
---         last_super_press = 0
---     else
---         last_super_press = current_time
---     end
--- end, { description = "Toggle Hyprspace overview op dubbele Super-klik" })
-
--- hl.bind("Super_L", function()
---     local current_time = os.clock()
---
---     if overview_is_open then
---         -- Enkele klik: sluit de overview direct als deze al open is
---         hl.plugin.overview.toggle()
---         overview_is_open = false
---         last_super_press = 0
---     else
---         -- Dubbele klik: open de overview alleen bij een snelle tweede druk
---         if (current_time - last_super_press) < double_tap_window then
---             hl.plugin.overview.toggle()
---             overview_is_open = true
---             last_super_press = 0
---         else
---             last_super_press = current_time
---         end
---     end
--- end, { description = "Open overview met dubbele Super, sluit met enkele Super" })
-
 -- Zoom
 local function zoomfunction(value)
     local zoomvalue = hl.get_config("cursor:zoom_factor")
@@ -140,15 +98,14 @@ hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(noctCall .. "settings-toggle"))
 
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(noctCall .. "panel-toggle control-center"))
 -- hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("~/.config/hypr/scripts/rofi.sh"))
-hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("vicinae toggle"))
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher"))
 
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd(noctCall .. "panel-toggle launcher /emo"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(noctCall .. "session lock"))
 hl.bind(mainMod .. " + ALT + C", hl.dsp.exec_cmd(noctCall .. "panel-toggle session"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(noctCall .. "power-cycle"))
-hl.bind("SUPER + g", function()
-    hl.plugin.scrolloverview.overview("toggle all")
-end)
+hl.bind("SUPER + G", hl.dsp.group.toggle(), { description = "Toggle window group" })
+
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("spotify"))
 ---------------------------
 ---- HARDWARE CONTROLS ----
@@ -227,3 +184,7 @@ hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special())
 
 hl.bind("SUPER + CONTROL + W", function() hl.plugin.hymission.stage_toggle() end)
 hl.bind("SUPER + W", hl.plugin.hymission.toggle)
+
+
+hl.bind(mainMod .. " + colon", hl.dsp.layout("move +col"))
+hl.bind(mainMod .. " + comma", hl.dsp.layout("move -col"))
