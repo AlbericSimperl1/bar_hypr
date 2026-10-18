@@ -11,7 +11,7 @@ ShellRoot {
 
     property bool overviewActive: true
 
-    readonly property color barBg: '#20000207'
+    readonly property color barBg: '#40000207'
     readonly property color fg: '#fff7e5'
     readonly property color accent: '#ebd9b9'
     readonly property color borderCol: "#2cffffff"

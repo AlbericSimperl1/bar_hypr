@@ -43,269 +43,6 @@ Item {
         return p && p[key] ? p[key] : def;
     }
 
-    // ── inline components (only reference Config + own props) ──
-    component Lbl: Text {
-        color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
-        font.family: Config.fontFamily
-        font.pixelSize: 12
-        Layout.preferredWidth: 140
-    }
-
-    component Chip: Rectangle {
-        id: chip
-        property string label
-        property bool sel: false
-        signal activated
-        implicitWidth: 70
-        implicitHeight: 28
-        radius: 3
-        color: sel ? Config.accentColor : (chipMa.containsMouse ? "#14ffffff" : "transparent")
-        border.color: "#20ffffff"
-        border.width: 1
-        Text {
-            anchors.centerIn: parent
-            text: chip.label
-            color: chip.sel ? "#14130e" : Config.fgColor
-            font.family: Config.fontFamily
-            font.pixelSize: 12
-            font.capitalization: Font.Capitalize
-        }
-        MouseArea {
-            id: chipMa
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: chip.activated()
-        }
-    }
-
-    component SliderRow: RowLayout {
-        id: sr
-        property string label
-        property real from: 0
-        property real to: 100
-        property real value: 50
-        property string suffix: ""
-        signal moved(real v)
-        Layout.fillWidth: true
-        spacing: 8
-
-        Lbl {
-            text: sr.label
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 10
-            color: "#15ffffff"
-            border.color: "#20ffffff"
-            border.width: 1
-            radius: 2
-            Rectangle {
-                width: parent.width * Math.max(0, Math.min(1, (sr.value - sr.from) / (sr.to - sr.from)))
-                height: parent.height
-                radius: 2
-                color: Config.accentColor
-            }
-            MouseArea {
-                anchors.fill: parent
-                anchors.topMargin: -6
-                anchors.bottomMargin: -6
-                cursorShape: Qt.PointingHandCursor
-                function apply(mx) {
-                    sr.moved(sr.from + (sr.to - sr.from) * Math.max(0, Math.min(1, mx / width)));
-                }
-                onPressed: m => apply(m.x)
-                onPositionChanged: m => {
-                    if (pressed)
-                        apply(m.x);
-                }
-            }
-        }
-        Text {
-            text: Math.round(sr.value) + sr.suffix
-            color: Config.fgColor
-            font.family: Config.fontFamily
-            font.pixelSize: 12
-            horizontalAlignment: Text.AlignRight
-            Layout.preferredWidth: 48
-        }
-    }
-
-    component ToggleRow: RowLayout {
-        id: tr
-        property string label
-        property bool value: false
-        signal toggled(bool v)
-        Layout.fillWidth: true
-        spacing: 8
-        Lbl {
-            text: tr.label
-        }
-        Rectangle {
-            Layout.preferredWidth: 40
-            Layout.preferredHeight: 20
-            radius: 10
-            color: tr.value ? Config.accentColor : "#30ffffff"
-            Rectangle {
-                x: tr.value ? 22 : 2
-                y: 2
-                width: 16
-                height: 16
-                radius: 8
-                color: tr.value ? "#14130e" : "#ffffff"
-            }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: tr.toggled(!tr.value)
-            }
-        }
-        Item {
-            Layout.fillWidth: true
-        }
-    }
-
-    component FieldRow: RowLayout {
-        id: fr
-        property string label
-        property string value
-        property bool isColor: false
-        signal committed(string v)
-        Layout.fillWidth: true
-        spacing: 8
-        Lbl {
-            text: fr.label
-        }
-        Rectangle {
-            visible: fr.isColor
-            Layout.preferredWidth: 24
-            Layout.preferredHeight: 24
-            radius: 3
-            color: fr.isColor ? fr.value : "transparent"
-            border.color: "#20ffffff"
-            border.width: 1
-        }
-        TextField {
-            Layout.fillWidth: true
-            text: fr.value
-            color: Config.fgColor
-            font.family: Config.fontFamily
-            font.pixelSize: 12
-            selectByMouse: true
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#20ffffff"
-                border.width: 1
-                radius: 3
-            }
-            onEditingFinished: {
-                if (!fr.isColor || /^#[0-9a-fA-F]{6,8}$/.test(text))
-                    fr.committed(text);
-            }
-        }
-    }
-
-    component WidgetRow: Rectangle {
-        id: wr
-        property string widgetName
-        property string zone
-        readonly property bool on: Config.isEnabled(widgetName)
-
-        Layout.fillWidth: true
-        implicitHeight: 34
-        radius: 3
-        color: wrMa.containsMouse ? "#1affffff" : "#12ffffff"
-        border.color: "#20ffffff"
-        border.width: 1
-
-        MouseArea {
-            id: wrMa
-            anchors.fill: parent
-            hoverEnabled: true
-        }
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 10
-            anchors.rightMargin: 8
-            spacing: 10
-
-            Text {
-                text: wr.widgetName
-                color: wr.on ? Config.fgColor : Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.4)
-                font.family: Config.fontFamily
-                font.pixelSize: 13
-                Layout.fillWidth: true
-            }
-
-            Repeater {
-                model: ["left", "center", "right"]
-                delegate: Text {
-                    id: zb
-                    required property string modelData
-                    text: modelData === "left" ? "⇤" : (modelData === "center" ? "≡" : "⇥")
-                    color: wr.zone === modelData ? Config.accentColor : (zbMa.containsMouse ? Config.fgColor : "#66fff7e5")
-                    font.pixelSize: 16
-                    MouseArea {
-                        id: zbMa
-                        anchors.fill: parent
-                        anchors.margins: -3
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Config.moveToZone(wr.widgetName, zb.modelData)
-                    }
-                }
-            }
-
-            Text {
-                text: "↑"
-                color: upMa.containsMouse ? Config.fgColor : "#66fff7e5"
-                font.pixelSize: 16
-                MouseArea {
-                    id: upMa
-                    anchors.fill: parent
-                    anchors.margins: -3
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Config.moveInZone(wr.widgetName, -1, wr.zone)
-                }
-            }
-            Text {
-                text: "↓"
-                color: dnMa.containsMouse ? Config.fgColor : "#66fff7e5"
-                font.pixelSize: 16
-                MouseArea {
-                    id: dnMa
-                    anchors.fill: parent
-                    anchors.margins: -3
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Config.moveInZone(wr.widgetName, 1, wr.zone)
-                }
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 16
-                radius: 8
-                color: wr.on ? Config.accentColor : "#30ffffff"
-                Rectangle {
-                    x: wr.on ? 14 : 2
-                    y: 2
-                    width: 12
-                    height: 12
-                    radius: 6
-                    color: wr.on ? "#14130e" : "#ffffff"
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Config.toggleWidget(wr.widgetName)
-                }
-            }
-        }
-    }
-
     // ── layout ──
     ColumnLayout {
         anchors.fill: parent
@@ -387,14 +124,14 @@ Item {
                     spacing: 8
                     visible: root.tab === "bar"
 
-                    Lbl {
+                    SLbl {
                         text: "POSITION"
                     }
                     RowLayout {
                         spacing: 6
                         Repeater {
                             model: ["top", "bottom", "left", "right"]
-                            delegate: Chip {
+                            delegate: SChip {
                                 required property string modelData
                                 label: modelData
                                 sel: Config.barPosition === modelData
@@ -403,7 +140,7 @@ Item {
                         }
                     }
 
-                    SliderRow {
+                    SSlider {
                         label: "Bar height"
                         from: 16
                         to: 60
@@ -411,15 +148,35 @@ Item {
                         value: Config.barHeight
                         onMoved: v => Config.barHeight = Math.round(v)
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Edge margin"
                         from: 0
-                        to: 24
+                        to: 48
                         suffix: "px"
                         value: Config.barMargin
                         onMoved: v => Config.barMargin = Math.round(v)
                     }
-                    SliderRow {
+                    SSlider {
+                        label: "Side margin"
+                        from: 0
+                        to: 600
+                        suffix: "px"
+                        value: Config.barSideMargin
+                        onMoved: v => Config.barSideMargin = Math.round(v)
+                    }
+                    SSlider {
+                        label: "Border width"
+                        from: 0
+                        to: 6
+                        suffix: "px"
+                        value: Config.borderWidth
+                        onMoved: v => {
+                            if (v >= 0.5 && Config.borderColor.a === 0)
+                                Config.borderColor = "#66ffffff";
+                            Config.borderWidth = Math.round(v);
+                        }
+                    }
+                    SSlider {
                         label: "Bar inset"
                         from: 0
                         to: 48
@@ -427,7 +184,7 @@ Item {
                         value: Config.barInset
                         onMoved: v => Config.barInset = Math.round(v)
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Bar rounding"
                         from: 0
                         to: 24
@@ -435,7 +192,7 @@ Item {
                         value: Config.barRadius
                         onMoved: v => Config.barRadius = Math.round(v)
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Panel gap"
                         from: 0
                         to: 24
@@ -443,7 +200,7 @@ Item {
                         value: Config.barGap
                         onMoved: v => Config.barGap = Math.round(v)
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Panel rounding"
                         from: 0
                         to: 20
@@ -459,45 +216,40 @@ Item {
                     spacing: 8
                     visible: root.tab === "colors"
 
-                    FieldRow {
+                    SField {
                         label: "Bar background"
                         isColor: true
                         value: String(Config.barBg)
                         onCommitted: v => Config.barBg = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Foreground"
                         isColor: true
                         value: String(Config.fgColor)
                         onCommitted: v => Config.fgColor = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Accent"
                         isColor: true
                         value: String(Config.accentColor)
                         onCommitted: v => Config.accentColor = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Border"
                         isColor: true
                         value: String(Config.borderColor)
                         onCommitted: v => Config.borderColor = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Panel background"
                         isColor: true
                         value: String(Config.panelBg)
                         onCommitted: v => Config.panelBg = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Font family"
                         value: Config.fontFamily
                         onCommitted: v => Config.fontFamily = v
-                    }
-                    FieldRow {
-                        label: "Icon font"
-                        value: Config.iconFont
-                        onCommitted: v => Config.iconFont = v
                     }
                 }
 
@@ -515,18 +267,29 @@ Item {
                             Layout.fillWidth: true
                             spacing: 4
 
-                            Lbl {
+                            SLbl {
                                 text: zcol.modelData.toUpperCase() + " ZONE"
                                 Layout.topMargin: 6
                             }
 
+                            readonly property var list: modelData === "left" ? Config.leftWidgets : (modelData === "center" ? Config.centerWidgets : Config.rightWidgets)
+
                             Repeater {
-                                model: zcol.modelData === "left" ? Config.leftWidgets : (zcol.modelData === "center" ? Config.centerWidgets : Config.rightWidgets)
-                                delegate: WidgetRow {
+                                model: zcol.list
+                                delegate: SWidgetRow {
                                     required property string modelData
                                     widgetName: modelData
                                     zone: zcol.modelData
                                 }
+                            }
+
+                            Text {
+                                visible: zcol.list.length === 0
+                                text: "empty - move a widget here with L / C / R"
+                                color: "#66fff7e5"
+                                font.family: Config.fontFamily
+                                font.pixelSize: 12
+                                Layout.leftMargin: 4
                             }
                         }
                     }
@@ -538,7 +301,7 @@ Item {
                     spacing: 8
                     visible: root.tab === "panels"
 
-                    ToggleRow {
+                    SToggle {
                         label: "Auto-size height"
                         value: Config.panelsAutoSize
                         onToggled: v => {
@@ -563,7 +326,7 @@ Item {
                                 font.bold: true
                                 font.capitalization: Font.Capitalize
                             }
-                            SliderRow {
+                            SSlider {
                                 label: "Width"
                                 from: 320
                                 to: 800
@@ -571,7 +334,7 @@ Item {
                                 value: root.panelSize(pcol.modelData, "width", 480)
                                 onMoved: v => root.setPanelSize(pcol.modelData, "width", v)
                             }
-                            SliderRow {
+                            SSlider {
                                 label: "Height"
                                 from: 140
                                 to: 650
@@ -589,46 +352,41 @@ Item {
                     spacing: 8
                     visible: root.tab === "format"
 
-                    FieldRow {
+                    SField {
                         label: "Clock format"
                         value: Config.clockFormat
                         onCommitted: v => Config.clockFormat = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Date format"
                         value: Config.dateFormat
                         onCommitted: v => Config.dateFormat = v
                     }
-                    FieldRow {
+                    SField {
                         label: "Date locale"
                         value: Config.dateLocale
                         onCommitted: v => Config.dateLocale = v
                     }
-                    ToggleRow {
+                    SToggle {
                         label: "Show date"
                         value: Config.showDate
                         onToggled: v => Config.showDate = v
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Workspace count"
                         from: 1
                         to: 20
                         value: Config.workspaceCount
                         onMoved: v => Config.workspaceCount = Math.round(v)
                     }
-                    ToggleRow {
-                        label: "Workspace numbers"
-                        value: Config.workspaceShowNumbers
-                        onToggled: v => Config.workspaceShowNumbers = v
-                    }
                     RowLayout {
                         spacing: 6
-                        Lbl {
+                        SLbl {
                             text: "Volume display"
                         }
                         Repeater {
                             model: ["icon", "percent", "both"]
-                            delegate: Chip {
+                            delegate: SChip {
                                 required property string modelData
                                 label: modelData
                                 sel: Config.volumeIconMode === modelData
@@ -636,7 +394,7 @@ Item {
                             }
                         }
                     }
-                    SliderRow {
+                    SSlider {
                         label: "Media title chars"
                         from: 10
                         to: 60

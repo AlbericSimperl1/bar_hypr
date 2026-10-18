@@ -4,12 +4,14 @@ singleton WidgetRegistry WidgetRegistry.qml
 singleton Notifications Notifications.qml
 
 BarContent BarContent.qml
-BatteryWidget BatteryWidget.qml
+BatteryPill BatteryPill.qml
 BluetoothPanel2 BluetoothPanel2.qml
 Brightness Brightness.qml
 BrightnessPanel BrightnessPanel.qml
 Clock Clock.qml
-CpuRamWidget CpuRamWidget.qml
+CpuWidget CpuWidget.qml
+RamWidget RamWidget.qml
+WifiDots WifiDots.qml
 MediaPanel MediaPanel.qml
 MediaWidget MediaWidget.qml
 NotificationPanel NotificationPanel.qml
@@ -21,3 +23,10 @@ VolumeWidget VolumeWidget.qml
 WifiPanel WifiPanel.qml
 Ws Ws.qml
 Zone Zone.qml
+SLbl SLbl.qml
+SChip SChip.qml
+SSlider SSlider.qml
+SToggle SToggle.qml
+SField SField.qml
+SIconBtn SIconBtn.qml
+SWidgetRow SWidgetRow.qml

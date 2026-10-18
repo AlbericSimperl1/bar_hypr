@@ -17,15 +17,17 @@ Singleton {
     property int barRadius: 0
     property int barInset: 18            // content padding along the bar
     property int barGap: 8               // gap between bar and panel
+    property int barSideMargin: 0        // inset from the two ends of the bar
+    property int borderWidth: 0
 
     // ── Colors ──
     property color barBg: "#20000207"
     property color fgColor: "#fff7e5"
     property color accentColor: "#ebd9b9"
-    property color borderColor: "#00ffffff"
+    property color borderColor: "#2cffffff"
     property color panelBg: "#60000207"
     property string fontFamily: "mononoki"
-    property string iconFont: "JetBrainsMono Nerd Font Mono"
+    readonly property string iconFont: fontFamily   // old bar rendered icons with the main font + fallback
 
     // ── Panels ──
     property int panelWidth: 480
@@ -36,13 +38,14 @@ Singleton {
     readonly property int panelWidthMax: 800
 
     // ── Widget zones ──
-    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpuram", "battery", "power", "settings"]
+    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "battery", "power", "settings"]
     property var leftWidgets: ["clock"]
     property var centerWidgets: ["ws"]
-    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpuram", "battery"]
+    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "battery"]
     property var widgetDisabled: ({
             "volume": true,
-            "cpuram": true,
+            "cpu": true,
+            "ram": true,
             "battery": true
         })
 
@@ -101,7 +104,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "fontFamily", "iconFont", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg"]
 
     function _save() {
@@ -146,11 +149,26 @@ Singleton {
         _ensureAllPlaced();
     }
 
+    readonly property var _defaultOff: ["volume", "cpu", "ram", "battery"]
+
     function _ensureAllPlaced() {
+        // drop widgets that no longer exist (e.g. old "cpuram")
+        const ok = w => allWidgets.indexOf(w) >= 0;
+        leftWidgets = leftWidgets.filter(ok);
+        centerWidgets = centerWidgets.filter(ok);
+        rightWidgets = rightWidgets.filter(ok);
+
         const placed = new Set([...leftWidgets, ...centerWidgets, ...rightWidgets]);
         const missing = allWidgets.filter(w => !placed.has(w));
-        if (missing.length > 0)
+        if (missing.length > 0) {
+            const d = Object.assign({}, widgetDisabled);
+            missing.forEach(w => {
+                if (_defaultOff.indexOf(w) >= 0 && d[w] === undefined)
+                    d[w] = true;
+            });
+            widgetDisabled = d;
             rightWidgets = rightWidgets.concat(missing);
+        }
     }
 
     // ── Helpers ──
@@ -216,13 +234,14 @@ Singleton {
     onBarRadiusChanged: saveTimer.restart()
     onBarInsetChanged: saveTimer.restart()
     onBarGapChanged: saveTimer.restart()
+    onBarSideMarginChanged: saveTimer.restart()
+    onBorderWidthChanged: saveTimer.restart()
     onBarBgChanged: saveTimer.restart()
     onFgColorChanged: saveTimer.restart()
     onAccentColorChanged: saveTimer.restart()
     onBorderColorChanged: saveTimer.restart()
     onPanelBgChanged: saveTimer.restart()
     onFontFamilyChanged: saveTimer.restart()
-    onIconFontChanged: saveTimer.restart()
     onPanelRadiusChanged: saveTimer.restart()
     onClockFormatChanged: saveTimer.restart()
     onDateFormatChanged: saveTimer.restart()

@@ -15,7 +15,8 @@ Singleton {
             "notifications": notificationsComp,
             "brightness": brightnessComp,
             "volume": volumeComp,
-            "cpuram": cpuramComp,
+            "cpu": cpuComp,
+            "ram": ramComp,
             "battery": batteryComp,
             "power": powerComp,
             "settings": settingsComp
@@ -42,12 +43,20 @@ Singleton {
         VolumeWidget {}
     }
     Component {
-        id: cpuramComp
-        CpuRamWidget {}
+        id: cpuComp
+        CpuWidget {}
+    }
+    Component {
+        id: ramComp
+        RamWidget {}
     }
     Component {
         id: batteryComp
-        BatteryWidget {}
+        BatteryPill {}
+    }
+    Component {
+        id: wifiComp
+        WifiDots {}
     }
 
     Component {
@@ -64,21 +73,14 @@ Singleton {
         }
     }
 
+    // size = pixelSize from the old bar, dy = vertical nudge if a glyph sits high/low
     Component {
         id: bluetoothComp
         PanelIcon {
             panel: "bluetooth"
-            glyph: "\udb80\udcaf"
+            glyph: "\uf293"
             size: 22
-        }
-    }
-
-    Component {
-        id: wifiComp
-        PanelIcon {
-            panel: "wifi"
-            glyph: "\udb82\udd28"
-            size: 29
+            dy: 0
         }
     }
 
@@ -88,10 +90,11 @@ Singleton {
             panel: "notifications"
             glyph: Notifications.dndEnabled ? "\udb80\udc9b" : "\udb80\udc9a"
             size: 25
+            dy: 0
             onRightClicked: Notifications.toggleDnd()
 
             Rectangle {
-                visible: Notifications.count > 0 && !Notifications.dndEnabled && !parent.isOpen
+                visible: Notifications.count > 0 && !Notifications.dndEnabled && BarState.activePanel !== "notifications"
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.topMargin: 2
@@ -110,6 +113,7 @@ Singleton {
             panel: "power"
             glyph: "\u23fb"
             size: 25
+            dy: 0
         }
     }
 
@@ -119,6 +123,7 @@ Singleton {
             panel: "settings"
             glyph: "\udb81\udc93"
             size: 24
+            dy: 0
         }
     }
 }

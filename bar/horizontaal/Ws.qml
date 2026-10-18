@@ -37,13 +37,23 @@ RowLayout {
             property bool hovered: false
 
             property real targetHeight: isActive ? 80 : (hasWindows ? 40 : 20)
+            Behavior on targetHeight {
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             Layout.preferredHeight: 8
             Layout.preferredWidth: targetHeight
             Layout.alignment: Qt.AlignHCenter
             radius: 2
             color: isActive ? "#99ffffff" : (hovered ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(1, 1, 1, 0.25))
-
+            Behavior on color {
+                ColorAnimation {
+                    duration: 100
+                }
+            }
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true

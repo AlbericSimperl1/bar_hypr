@@ -78,10 +78,10 @@ ShellRoot {
                 anchors.left: horizontal ? true : (pos === "left")
                 anchors.right: horizontal ? true : (pos === "right")
 
-                margins.top: pos === "top" ? Config.barMargin : 0
-                margins.bottom: pos === "bottom" ? Config.barMargin : 0
-                margins.left: pos === "left" ? Config.barMargin : 0
-                margins.right: pos === "right" ? Config.barMargin : 0
+                margins.top: pos === "top" ? Config.barMargin : (horizontal ? 0 : Config.barSideMargin)
+                margins.bottom: pos === "bottom" ? Config.barMargin : (horizontal ? 0 : Config.barSideMargin)
+                margins.left: pos === "left" ? Config.barMargin : (horizontal ? Config.barSideMargin : 0)
+                margins.right: pos === "right" ? Config.barMargin : (horizontal ? Config.barSideMargin : 0)
 
                 exclusiveZone: Config.barHeight + 2
 
@@ -153,7 +153,7 @@ ShellRoot {
                         color: Config.barBg
                         radius: Config.barRadius
                         border.color: Config.borderColor
-                        border.width: Config.borderColor.a > 0 ? 1 : 0
+                        border.width: Config.borderWidth
 
                         Item {
                             anchors.fill: parent
@@ -178,7 +178,7 @@ ShellRoot {
                         color: Config.panelBg
                         radius: Config.panelRadius
                         border.color: Config.borderColor
-                        border.width: Config.borderColor.a > 0 ? 1 : 0
+                        border.width: Config.borderWidth
                         clip: true
 
                         Item {

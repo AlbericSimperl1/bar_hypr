@@ -1,22 +1,39 @@
-// PanelIcon.qml - clickable glyph that toggles a panel
+// PanelIcon.qml - fixed-height cell, glyph centered, click toggles a panel
 import QtQuick
 
-Text {
+Item {
     id: ic
     property string panel: ""
     property string glyph: ""
     property int size: 25
+    property real dy: 0            // per-icon vertical nudge
     readonly property bool isOpen: BarState.activePanel === panel
+    default property alias extra: overlay.data
     signal rightClicked
 
-    text: isOpen ? "\udb80\udd43" : glyph
-    color: Config.fgColor
-    font.family: Config.iconFont
-    font.pixelSize: isOpen ? 22 : size
+    implicitWidth: Math.max(18, label.implicitWidth)
+    implicitHeight: 24
+
+    Text {
+        id: label
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: ic.isOpen ? 0 : ic.dy
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: ic.isOpen ? "\udb80\udd43" : ic.glyph
+        color: Config.fgColor
+        font.family: Config.iconFont
+        font.pixelSize: ic.isOpen ? 22 : ic.size
+    }
+
+    Item {
+        id: overlay
+        anchors.fill: parent
+    }
 
     MouseArea {
         anchors.fill: parent
-        anchors.margins: -4
+        anchors.margins: -3
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: mouse => {
