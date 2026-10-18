@@ -4,7 +4,7 @@
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd --all")
     hl.exec_cmd("xhost +SI:localuser:root")
-    hl.exec_cmd("quickshell -p ~/bar_hypr/bar/horizontaal")
+    hl.exec_cmd("quickshell -p ~/bar_hypr/b2")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("hyprctl setcursor MacTahoe-cursors 27")
     hl.exec_cmd("noctalia")
