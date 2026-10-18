@@ -389,13 +389,49 @@ Item {
             }
 
             // Audio Output Device Badge (Aangepast: dichter op de knoppen + grotere dimensions & font)
+            //             Rectangle {
+            //                 Layout.alignment: Qt.AlignHCenter
+            //                 Layout.topMargin: -27
+            //                 implicitWidth: deviceRow.implicitWidth + 30
+            //                 implicitHeight: deviceRow.implicitHeight + 12
+            //                 radius: 5
+            //                 color: "#20ffffff"
+            //                 border.color: "#30ffffff"
+            //                 border.width: 1
+            //
+            //                 RowLayout {
+            //                     id: deviceRow
+            //                     anchors.centerIn: parent
+            //                     spacing: 8
+            //
+            //                     Text {
+            //                         text: "\uf028"
+            //                         color: root.accentColor
+            //                         font.family: root.fontFamily
+            //                         font.pixelSize: 20
+            //                     }
+            //
+            //                     Text {
+            //                         text: root.audioDeviceName
+            //                         color: root.fgColor
+            //                         font.family: root.fontFamily
+            //                         font.pixelSize: 15
+            //                         font.bold: true
+            //                         elide: Text.ElideRight
+            //                         Layout.maximumWidth: 300
+            //                     }
+            //                 }
+            //             }
+
+            // Audio Output Device Badge
             Rectangle {
+                id: deviceBadge
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: -27
                 implicitWidth: deviceRow.implicitWidth + 30
                 implicitHeight: deviceRow.implicitHeight + 12
                 radius: 5
-                color: "#20ffffff"
+                color: badgeMouse.containsMouse ? "#2affffff" : "#20ffffff"
                 border.color: "#30ffffff"
                 border.width: 1
 
@@ -420,6 +456,15 @@ Item {
                         elide: Text.ElideRight
                         Layout.maximumWidth: 300
                     }
+                }
+
+                MouseArea {
+                    id: badgeMouse
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Quickshell.execDetached(["pavucontrol"])
                 }
             }
         }
