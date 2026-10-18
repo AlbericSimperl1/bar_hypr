@@ -50,14 +50,15 @@ Singleton {
     readonly property int panelWidthMax: 800
 
     // ── Widget zones ──
-    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "battery", "power", "settings"]
+    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "battery", "power", "settings"]
     property var leftWidgets: ["clock"]
     property var centerWidgets: ["ws"]
-    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "battery"]
+    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "gpu", "battery"]
     property var widgetDisabled: ({
             "volume": true,
             "cpu": true,
             "ram": true,
+            "gpu": true,
             "battery": true
         })
 
@@ -161,7 +162,7 @@ Singleton {
         _ensureAllPlaced();
     }
 
-    readonly property var _defaultOff: ["volume", "cpu", "ram", "battery"]
+    readonly property var _defaultOff: ["volume", "cpu", "ram", "gpu", "battery"]
 
     function _ensureAllPlaced() {
         // drop widgets that no longer exist (e.g. old "cpuram")

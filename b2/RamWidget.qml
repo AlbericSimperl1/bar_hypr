@@ -1,16 +1,11 @@
 // RamWidget.qml
 import QtQuick
-import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
 
-Item {
+StatCell {
     id: root
-    readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
-    property int pct: 0
-
-    implicitWidth: grid.implicitWidth
-    implicitHeight: Math.max(24, grid.implicitHeight)
+    shortLabel: "R"
+    longLabel: "ram"
 
     Process {
         id: proc
@@ -19,7 +14,7 @@ Item {
             onRead: line => {
                 const v = parseInt(line);
                 if (!isNaN(v))
-                    root.pct = v;
+                    root.value = v;
             }
         }
     }
@@ -30,29 +25,5 @@ Item {
         repeat: true
         triggeredOnStart: true
         onTriggered: proc.running = true
-    }
-
-    GridLayout {
-        id: grid
-        anchors.centerIn: parent
-        columns: root.vertical ? 1 : 2
-        rowSpacing: 0
-        columnSpacing: 6
-
-        Text {
-            text: "ram"
-            color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
-            font.family: Config.fontFamily
-            font.pixelSize: Math.round(15 * Config.fontScale)
-            Layout.alignment: Qt.AlignCenter
-        }
-        Text {
-            text: String(root.pct).padStart(2, " ") + "%"
-            color: Config.fgColor
-            font.family: Config.fontFamily
-            font.pixelSize: Math.round(15 * Config.fontScale)
-            font.bold: true
-            Layout.alignment: Qt.AlignCenter
-        }
     }
 }

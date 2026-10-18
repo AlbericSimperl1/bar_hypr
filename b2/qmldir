@@ -31,3 +31,5 @@ SField SField.qml
 SIconBtn SIconBtn.qml
 SWidgetRow SWidgetRow.qml
 Island Island.qml
+StatCell StatCell.qml
+GpuWidget GpuWidget.qml

@@ -17,6 +17,7 @@ Singleton {
             "volume": volumeComp,
             "cpu": cpuComp,
             "ram": ramComp,
+            "gpu": gpuComp,
             "battery": batteryComp,
             "power": powerComp,
             "settings": settingsComp
@@ -49,6 +50,10 @@ Singleton {
     Component {
         id: ramComp
         RamWidget {}
+    }
+    Component {
+        id: gpuComp
+        GpuWidget {}
     }
     Component {
         id: batteryComp
