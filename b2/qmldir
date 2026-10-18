@@ -33,3 +33,4 @@ SWidgetRow SWidgetRow.qml
 Island Island.qml
 StatCell StatCell.qml
 GpuWidget GpuWidget.qml
+Spacer Spacer.qml

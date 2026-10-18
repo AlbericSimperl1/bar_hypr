@@ -24,9 +24,15 @@ Singleton {
         })
 
     function componentFor(name) {
+        if (Config.isSpacer(name))
+            return spacerComp;
         return map[name] || null;
     }
 
+    Component {
+        id: spacerComp
+        Spacer {}
+    }
     Component {
         id: clockComp
         Clock {}
@@ -127,8 +133,8 @@ Singleton {
         id: settingsComp
         PanelIcon {
             panel: "settings"
-            glyph: "\uf1de"
-            size: 22
+            glyph: Config.settingsIcon !== "" ? Config.settingsIcon : "\uf1de"
+            size: Config.settingsIconSize
             dy: 0
         }
     }

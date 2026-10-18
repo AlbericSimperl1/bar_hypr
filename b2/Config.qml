@@ -89,6 +89,13 @@ Singleton {
     property string volumeIconMode: "icon"   // icon | percent | both
     property int mediaTitleMax: 25
 
+    // ── Settings icon ──
+    property string settingsIcon: "\uf1de"
+    property int settingsIconSize: 22
+
+    // ── Spacers (name "spacer-xxxx" -> width in px) ──
+    property var spacerSizes: ({})
+
     property var panelSizes: ({
             "media": {
                 "width": 520,
@@ -134,7 +141,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "settingsIcon", "settingsIconSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -146,6 +153,7 @@ Singleton {
         data.rightWidgets = rightWidgets;
         data.widgetDisabled = widgetDisabled;
         data.panelSizes = panelSizes;
+        data.spacerSizes = spacerSizes;
         store.setText(JSON.stringify(data, null, 2));
     }
 
@@ -176,6 +184,8 @@ Singleton {
             widgetDisabled = data.widgetDisabled;
         if (data.panelSizes)
             panelSizes = data.panelSizes;
+        if (data.spacerSizes && typeof data.spacerSizes === "object")
+            spacerSizes = data.spacerSizes;
         _ensureAllPlaced();
     }
 
@@ -183,7 +193,7 @@ Singleton {
 
     function _ensureAllPlaced() {
         // drop widgets that no longer exist (e.g. old "cpuram")
-        const ok = w => allWidgets.indexOf(w) >= 0;
+        const ok = w => allWidgets.indexOf(w) >= 0 || isSpacer(w);
         leftWidgets = leftWidgets.filter(ok);
         centerWidgets = centerWidgets.filter(ok);
         rightWidgets = rightWidgets.filter(ok);
@@ -248,6 +258,36 @@ Singleton {
             root[toZone + "Widgets"] = root[toZone + "Widgets"].concat([name]);
         save();
     }
+    // ── Spacers ──
+    function isSpacer(name) {
+        return String(name).indexOf("spacer-") === 0;
+    }
+    function spacerSize(name) {
+        const v = spacerSizes[name];
+        return v === undefined ? 24 : v;
+    }
+    function setSpacerSize(name, px) {
+        const d = Object.assign({}, spacerSizes);
+        d[name] = Math.max(0, Math.min(4000, Math.round(px)));
+        spacerSizes = d;
+        save();
+    }
+    function addSpacer(zone) {
+        const id = "spacer-" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+        const key = zone + "Widgets";
+        root[key] = root[key].concat([id]);
+        setSpacerSize(id, 24);
+    }
+    function removeWidget(name) {
+        leftWidgets = leftWidgets.filter(w => w !== name);
+        centerWidgets = centerWidgets.filter(w => w !== name);
+        rightWidgets = rightWidgets.filter(w => w !== name);
+        const d = Object.assign({}, spacerSizes);
+        delete d[name];
+        spacerSizes = d;
+        save();
+    }
+
     function panelWidthFor(name) {
         const p = panelSizes[name];
         return p && p.width ? p.width : panelWidth;
@@ -289,6 +329,8 @@ Singleton {
     onWorkspaceShowNumbersChanged: saveTimer.restart()
     onVolumeIconModeChanged: saveTimer.restart()
     onMediaTitleMaxChanged: saveTimer.restart()
+    onSettingsIconChanged: saveTimer.restart()
+    onSettingsIconSizeChanged: saveTimer.restart()
 
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p", root._dir]);

@@ -42,6 +42,18 @@ Item {
         Config.panelSizes = next;
         Config.save();
     }
+    // accepts a pasted glyph, or a hex codepoint like "f013" / "U+F0493"
+    function parseGlyph(s) {
+        const t = String(s || "").trim();
+        const m = /^(?:U\+|0x)?([0-9a-fA-F]{4,6})$/.exec(t);
+        if (!m)
+            return t;
+        const cp = parseInt(m[1], 16);
+        if (cp < 0x10000)
+            return String.fromCharCode(cp);
+        const c = cp - 0x10000;
+        return String.fromCharCode(0xD800 + (c >> 10), 0xDC00 + (c & 0x3FF));
+    }
     function panelSize(name, key, def) {
         const p = Config.panelSizes[name];
         return p && p[key] ? p[key] : def;
@@ -244,6 +256,34 @@ Item {
                         value: Config.iconScalePct
                         onMoved: v => Config.iconScalePct = Math.round(v)
                     }
+                    SSlider {
+                        label: "Settings icon size"
+                        from: 10
+                        to: 60
+                        suffix: "px"
+                        value: Config.settingsIconSize
+                        onMoved: v => Config.settingsIconSize = Math.round(v)
+                    }
+                    RowLayout {
+                        spacing: 6
+                        SLbl {
+                            text: "Settings icon"
+                        }
+                        Repeater {
+                            model: ["\uf1de", "\uf013", "\uf085", "\uf0ad", "\uf0c9"]
+                            delegate: SIconBtn {
+                                required property string modelData
+                                glyph: modelData
+                                active: Config.settingsIcon === modelData
+                                onActivated: Config.settingsIcon = modelData
+                            }
+                        }
+                    }
+                    SField {
+                        label: "Icon glyph / hex"
+                        value: Config.settingsIcon
+                        onCommitted: v => Config.settingsIcon = root.parseGlyph(v)
+                    }
                     SField {
                         label: "Font family"
                         value: Config.fontFamily
@@ -343,9 +383,22 @@ Item {
                             Layout.fillWidth: true
                             spacing: 4
 
-                            SLbl {
-                                text: Config.zoneLabel(zcol.modelData) + " ZONE"
+                            RowLayout {
+                                Layout.fillWidth: true
                                 Layout.topMargin: 6
+                                spacing: 8
+
+                                SLbl {
+                                    text: Config.zoneLabel(zcol.modelData) + " ZONE"
+                                }
+                                Item {
+                                    Layout.fillWidth: true
+                                }
+                                SChip {
+                                    label: "+ spacer"
+                                    implicitWidth: 84
+                                    onActivated: Config.addSpacer(zcol.modelData)
+                                }
                             }
 
                             readonly property var list: modelData === "left" ? Config.leftWidgets : (modelData === "center" ? Config.centerWidgets : Config.rightWidgets)

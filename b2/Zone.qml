@@ -21,6 +21,10 @@ GridLayout {
         delegate: Loader {
             required property string modelData
             sourceComponent: WidgetRegistry.componentFor(modelData)
+            onLoaded: {
+                if (item && item.widgetName !== undefined)
+                    item.widgetName = modelData;
+            }
             Layout.alignment: zoneRoot.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
             visible: !item || item.wantVisible === undefined || item.wantVisible
         }
