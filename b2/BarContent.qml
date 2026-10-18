@@ -1,72 +1,28 @@
 // BarContent.qml
 import QtQuick
-import QtQuick.Layouts
 
 Item {
     id: root
-    implicitHeight: Config.barHeight
-
     readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
 
-    Loader {
-        anchors.fill: parent
-        sourceComponent: root.vertical ? columnComp : rowComp
+    Zone {
+        zone: "left"
+        anchors.left: root.vertical ? undefined : root.left
+        anchors.top: root.vertical ? root.top : undefined
+        anchors.verticalCenter: root.vertical ? undefined : root.verticalCenter
+        anchors.horizontalCenter: root.vertical ? root.horizontalCenter : undefined
     }
 
-    Component {
-        id: rowComp
-        RowLayout {
-            spacing: 18
-            Layout.alignment: Qt.AlignVCenter
-
-            Zone { zone: "left"; horizontal: true }
-            Item { Layout.fillWidth: true }
-            Zone { zone: "center"; horizontal: true }
-            Item { Layout.fillWidth: true }
-            Zone { zone: "right"; horizontal: true }
-        }
+    Zone {
+        zone: "center"
+        anchors.centerIn: parent
     }
 
-    Component {
-        id: columnComp
-        ColumnLayout {
-            spacing: 12
-            Layout.alignment: Qt.AlignHCenter
-
-            Zone { zone: "left"; horizontal: false }
-            Item { Layout.fillHeight: true }
-            Zone { zone: "center"; horizontal: false }
-            Item { Layout.fillHeight: true }
-            Zone { zone: "right"; horizontal: false }
-        }
-    }
-
-    // ─── Zone: a Flow of widgets for a given zone ─────────
-    component Zone: Item {
-        id: zoneItem
-        property string zone
-        property bool horizontal: true
-        implicitWidth:  flow.implicitWidth
-        implicitHeight: flow.implicitHeight
-
-        Flow {
-            id: flow
-            flow: zoneItem.horizontal ? Flow.LeftToRight : Flow.TopToBottom
-            spacing: 14
-
-            Repeater {
-                model: Config.widgetsForZone(zoneItem.zone)
-                delegate: Loader {
-                    id: widgetLoader
-                    required property string modelData
-                    sourceComponent: WidgetRegistry.componentFor(modelData)
-                    onLoaded: {
-                        if (item) {
-                            item.Layout.alignment = Qt.AlignVCenter;
-                        }
-                    }
-                }
-            }
-        }
+    Zone {
+        zone: "right"
+        anchors.right: root.vertical ? undefined : root.right
+        anchors.bottom: root.vertical ? root.bottom : undefined
+        anchors.verticalCenter: root.vertical ? undefined : root.verticalCenter
+        anchors.horizontalCenter: root.vertical ? root.horizontalCenter : undefined
     }
 }

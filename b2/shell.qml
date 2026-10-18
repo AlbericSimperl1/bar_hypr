@@ -1,15 +1,10 @@
 // shell.qml
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
-import Quickshell.Hyprland
-import Quickshell.Services.Mpris
 import Quickshell.Wayland
 
 ShellRoot {
     id: root
-    property bool overviewActive: true
 
     Variants {
         model: Quickshell.screens
@@ -23,44 +18,59 @@ ShellRoot {
             }
 
             PanelWindow {
-                id: barWindow
+                id: win
                 screen: perScreen.modelData
-                visible: root.overviewActive
                 color: "transparent"
 
-                // 1. FIXED: Added explicit Wayland layer and keyboard focus
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
+                // ── geometry helpers (ALWAYS referenced as win.* from child objects) ──
                 readonly property string pos: Config.barPosition
                 readonly property bool horizontal: pos === "top" || pos === "bottom"
-                readonly property bool vertical: !horizontal
-                readonly property real barThickness: Config.barHeight + Config.barMargin * 2
+                readonly property real bt: Config.barHeight
+
+                readonly property real barX: horizontal ? 0 : (pos === "left" ? 0 : width - bt)
+                readonly property real barY: horizontal ? (pos === "top" ? 0 : height - bt) : 0
+                readonly property real barW: horizontal ? width : bt
+                readonly property real barH: horizontal ? bt : height
 
                 readonly property real panelW: Config.panelWidthFor(BarState.activePanel)
-                readonly property real panelH: {
-                    if (!BarState.panelOpen)
-                        return Config.panelMinHeight;
-                    const target = BarState.activePanel;
-                    if (!Config.panelsAutoSize)
-                        return Config.panelHeightFor(target, Config.panelMaxHeight);
-                    switch (target) {
+                readonly property real contentH: {
+                    switch (BarState.activePanel) {
                     case "media":
                         return mediaPanel.implicitHeight;
                     case "bluetooth":
-                        return Math.min(Config.panelMaxHeight, bluetoothPanel.neededHeight);
+                        return bluetoothPanel.neededHeight;
                     case "wifi":
-                        return Math.min(Config.panelMaxHeight, wifiPanel.neededHeight);
+                        return wifiPanel.neededHeight;
                     case "notifications":
-                        return Math.min(Config.panelMaxHeight, notificationPanel.neededHeight);
+                        return notificationPanel.neededHeight;
                     case "power":
-                        return Math.min(Config.panelMaxHeight, powerPanel.neededHeight);
+                        return powerPanel.neededHeight;
                     case "brightness":
-                        return Math.min(Config.panelMaxHeight, brightnessPanel.neededHeight);
+                        return brightnessPanel.neededHeight;
                     case "settings":
-                        return Math.min(Config.panelMaxHeight, Config.panelHeightFor("settings", 620));
+                        return Config.panelHeightFor("settings", 620);
                     }
-                    return Config.panelMinHeight;
+                    return 0;
+                }
+                readonly property real panelH: BarState.activePanel === "settings" ? Config.panelHeightFor("settings", 620) : (Config.panelsAutoSize ? Math.min(Config.panelMaxHeight, Math.max(Config.panelMinHeight, contentH + 16)) : Config.panelHeightFor(BarState.activePanel, Config.panelMaxHeight))
+
+                readonly property real panelX: {
+                    if (horizontal) {
+                        const inset = Config.panelRadius + 2;
+                        const maxLeft = width - inset - panelW;
+                        return Math.max(inset, Math.min(BarState.clickX - panelW / 2, maxLeft));
+                    }
+                    return pos === "left" ? bt + Config.barGap : width - bt - Config.barGap - panelW;
+                }
+                readonly property real panelY: {
+                    if (horizontal)
+                        return pos === "top" ? bt + Config.barGap : height - bt - Config.barGap - panelH;
+                    const inset = Config.panelRadius + 2;
+                    const maxTop = height - inset - panelH;
+                    return Math.max(inset, Math.min(BarState.clickY - panelH / 2, maxTop));
                 }
 
                 anchors.top: horizontal ? (pos === "top") : true
@@ -68,59 +78,57 @@ ShellRoot {
                 anchors.left: horizontal ? true : (pos === "left")
                 anchors.right: horizontal ? true : (pos === "right")
 
+                margins.top: pos === "top" ? Config.barMargin : 0
+                margins.bottom: pos === "bottom" ? Config.barMargin : 0
+                margins.left: pos === "left" ? Config.barMargin : 0
+                margins.right: pos === "right" ? Config.barMargin : 0
+
                 exclusiveZone: Config.barHeight + 2
 
-                implicitHeight: horizontal ? (barThickness + Config.barGap + Config.panelMaxHeight) : 0
-                implicitWidth: vertical ? (barThickness + Config.barGap + Config.panelMaxHeight) : 0
+                implicitHeight: horizontal ? (bt + Config.barGap + Config.panelMaxHeight) : 0
+                implicitWidth: horizontal ? 0 : (bt + Config.barGap + Config.panelWidthMax)
 
-                // 2. FIXED: Use barWindow.width / barWindow.height so the mask is not 0x0
                 mask: Region {
                     Region {
-                        x: horizontal ? 0 : (pos === "left" ? Config.barMargin : barWindow.width - barThickness)
-                        y: horizontal ? (pos === "top" ? Config.barMargin : barWindow.height - barThickness) : 0
-                        width: horizontal ? barWindow.width : barThickness
-                        height: horizontal ? barThickness : barWindow.height
+                        x: win.barX
+                        y: win.barY
+                        width: win.barW
+                        height: win.barH
                     }
                     Region {
-                        x: barWindow.panelX
-                        y: barWindow.panelY
-                        width: BarState.panelOpen ? panelW : 0
-                        height: BarState.panelOpen ? panelH : 0
+                        x: win.panelX
+                        y: win.panelY
+                        width: BarState.panelOpen ? win.panelW : 0
+                        height: BarState.panelOpen ? win.panelH : 0
                     }
                 }
 
-                readonly property real panelX: {
-                    if (!BarState.panelOpen)
-                        return 0;
-                    if (horizontal) {
-                        const inset = Config.barMargin + Config.panelRadius + 2;
-                        const maxLeft = width - inset - panelW;
-                        return Math.max(inset, Math.min(BarState.clickX - panelW / 2, maxLeft));
+                BackgroundEffect.blurRegion: Region {
+                    Region {
+                        x: win.barX
+                        y: win.barY
+                        width: win.barW
+                        height: win.barH
                     }
-                    return pos === "left" ? Config.barMargin + barThickness + Config.barGap : width - Config.barMargin - barThickness - Config.barGap - panelW;
-                }
-                readonly property real panelY: {
-                    if (!BarState.panelOpen)
-                        return 0;
-                    if (horizontal) {
-                        return pos === "top" ? Config.barMargin + barThickness + Config.barGap : height - Config.barMargin - barThickness - Config.barGap - panelH;
+                    Region {
+                        x: win.panelX
+                        y: win.panelY
+                        width: BarState.panelOpen ? win.panelW : 0
+                        height: BarState.panelOpen ? win.panelH : 0
                     }
-                    const inset = Config.barMargin + Config.panelRadius + 2;
-                    const maxTop = height - inset - panelH;
-                    return Math.max(inset, Math.min(BarState.clickY - panelH / 2, maxTop));
                 }
 
-                HoverHandler {
-                    id: barHover
-                }
-                property bool hovered: barHover.hovered
+                property bool hovered: false
 
                 Timer {
                     id: closeTimer
                     interval: 200
-                    onTriggered: if (!barWindow.hovered)
-                        BarState.close()
+                    onTriggered: {
+                        if (!win.hovered)
+                            BarState.close();
+                    }
                 }
+
                 onHoveredChanged: {
                     if (hovered)
                         closeTimer.stop();
@@ -132,12 +140,16 @@ ShellRoot {
                     id: windowRoot
                     anchors.fill: parent
 
+                    HoverHandler {
+                        onHoveredChanged: win.hovered = hovered
+                    }
+
                     Rectangle {
                         id: barSurface
-                        x: horizontal ? 0 : (pos === "left" ? Config.barMargin : parent.width - barThickness)
-                        y: horizontal ? (pos === "top" ? Config.barMargin : parent.height - barThickness) : 0
-                        width: horizontal ? parent.width : barThickness
-                        height: horizontal ? barThickness : parent.height
+                        x: win.barX
+                        y: win.barY
+                        width: win.barW
+                        height: win.barH
                         color: Config.barBg
                         radius: Config.barRadius
                         border.color: Config.borderColor
@@ -145,12 +157,11 @@ ShellRoot {
 
                         Item {
                             anchors.fill: parent
-                            anchors.leftMargin: horizontal ? Config.barInset : 0
-                            anchors.rightMargin: horizontal ? Config.barInset : 0
-                            anchors.topMargin: horizontal ? 0 : Config.barInset
-                            anchors.bottomMargin: horizontal ? 0 : Config.barInset
+                            anchors.leftMargin: win.horizontal ? Config.barInset : 0
+                            anchors.rightMargin: win.horizontal ? Config.barInset : 0
+                            anchors.topMargin: win.horizontal ? 0 : Config.barInset
+                            anchors.bottomMargin: win.horizontal ? 0 : Config.barInset
 
-                            // 3. FIXED: Added anchors.fill: parent so it takes up space
                             BarContent {
                                 anchors.fill: parent
                             }
@@ -159,10 +170,10 @@ ShellRoot {
 
                     Rectangle {
                         id: panelSurface
-                        x: barWindow.panelX
-                        y: barWindow.panelY
-                        width: BarState.panelOpen ? barWindow.panelW : 0
-                        height: BarState.panelOpen ? barWindow.panelH : 0
+                        x: win.panelX
+                        y: win.panelY
+                        width: win.panelW
+                        height: win.panelH
                         visible: BarState.panelOpen
                         color: Config.panelBg
                         radius: Config.panelRadius
@@ -235,22 +246,6 @@ ShellRoot {
                                 visible: BarState.activePanel === "settings"
                             }
                         }
-                    }
-                }
-
-                // 4. FIXED: Use barWindow.width / barWindow.height for blur region
-                BackgroundEffect.blurRegion: Region {
-                    Region {
-                        x: horizontal ? 0 : (pos === "left" ? Config.barMargin : barWindow.width - barThickness)
-                        y: horizontal ? (pos === "top" ? Config.barMargin : barWindow.height - barThickness) : 0
-                        width: horizontal ? barWindow.width : barThickness
-                        height: horizontal ? barThickness : barWindow.height
-                    }
-                    Region {
-                        x: barWindow.panelX
-                        y: barWindow.panelY
-                        width: BarState.panelOpen ? panelW : 0
-                        height: BarState.panelOpen ? panelH : 0
                     }
                 }
             }

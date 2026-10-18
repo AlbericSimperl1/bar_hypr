@@ -1,13 +1,13 @@
 // MediaWidget.qml
 import QtQuick
-import Quickshell
+import QtQuick.Layouts
 import Quickshell.Services.Mpris
 import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
-    implicitWidth: flow.implicitWidth
-    implicitHeight: flow.implicitHeight
+
+    readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
 
     readonly property var player: {
         const ps = Mpris.players.values;
@@ -33,17 +33,24 @@ Item {
         return artist + " - " + t;
     }
     readonly property bool isOpen: BarState.activePanel === "media"
+    readonly property bool wantVisible: hasPlayer || isOpen
 
-    visible: hasPlayer || isOpen
+    visible: wantVisible
+    implicitWidth: grid.implicitWidth
+    implicitHeight: grid.implicitHeight
 
-    Flow {
-        id: flow
-        flow: (Config.barPosition === "left" || Config.barPosition === "right") ? Flow.TopToBottom : Flow.LeftToRight
-        spacing: 8
+    GridLayout {
+        id: grid
+        columns: root.vertical ? 1 : 3
+        columnSpacing: 8
+        rowSpacing: 8
 
         Item {
-            width: 20
-            height: 20
+            visible: !root.isOpen
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+            Layout.alignment: Qt.AlignVCenter
+
             Image {
                 id: art
                 anchors.fill: parent
@@ -69,13 +76,14 @@ Item {
                 visible: art.status !== Image.Ready || root.artUrl === ""
                 text: "󰎈"
                 color: Config.fgColor
-                font.family: Config.fontFamily
+                font.family: Config.iconFont
                 font.pixelSize: 26
             }
         }
 
         Text {
-            visible: !root.isOpen && root.combo !== ""
+            visible: !root.isOpen && !root.vertical && root.combo !== ""
+            Layout.alignment: Qt.AlignVCenter
             text: root.combo
             color: Config.fgColor
             font.family: Config.fontFamily
@@ -85,9 +93,10 @@ Item {
 
         Text {
             visible: root.isOpen
-            text: "󰅃"
+            Layout.alignment: Qt.AlignVCenter
+            text: "\udb80\udd43"
             color: Config.fgColor
-            font.family: Config.fontFamily
+            font.family: Config.iconFont
             font.pixelSize: 22
         }
     }

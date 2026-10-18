@@ -10,46 +10,52 @@ Singleton {
     readonly property string _dir: Quickshell.env("HOME") + "/.config/quickshell"
     readonly property string _file: _dir + "/bar-config.json"
 
-    // ── Bar layout ─────────────────────────────────────────
-    property string barPosition: "top"          // top | bottom | left | right
-    property int barHeight: 28            // thickness (height for top/bottom, width for left/right)
-    property int barMargin: 6
+    // ── Bar layout (defaults mimic the old /bar/horizontaal bar) ──
+    property string barPosition: "top"   // top | bottom | left | right
+    property int barHeight: 24           // thickness
+    property int barMargin: 0            // distance from screen edge
     property int barRadius: 0
-    property int barInset: 18            // left/right content padding (or top/bottom for vertical)
-    property int barGap: 8             // gap between bar and panel
+    property int barInset: 18            // content padding along the bar
+    property int barGap: 8               // gap between bar and panel
 
-    // ── Colors ─────────────────────────────────────────────
+    // ── Colors ──
     property color barBg: "#20000207"
     property color fgColor: "#fff7e5"
     property color accentColor: "#ebd9b9"
-    property color borderColor: "#2cffffff"
+    property color borderColor: "#00ffffff"
     property color panelBg: "#60000207"
     property string fontFamily: "mononoki"
+    property string iconFont: "JetBrainsMono Nerd Font Mono"
 
-    // ── Panels ─────────────────────────────────────────────
+    // ── Panels ──
     property int panelWidth: 480
     property int panelMaxHeight: 650
     property int panelMinHeight: 140
     property int panelRadius: 3
+    property bool panelsAutoSize: true
+    readonly property int panelWidthMax: 800
 
-    // ── Widget zones (ordered lists per zone) ──────────────
+    // ── Widget zones ──
     readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpuram", "battery", "power", "settings"]
-    property var leftWidgets: ["ws", "clock"]
-    property var centerWidgets: []
-    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpuram", "battery", "power", "settings"]
-    property var widgetDisabled: ({})
+    property var leftWidgets: ["clock"]
+    property var centerWidgets: ["ws"]
+    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpuram", "battery"]
+    property var widgetDisabled: ({
+            "volume": true,
+            "cpuram": true,
+            "battery": true
+        })
 
-    // ── Widget formatting ──────────────────────────────────
+    // ── Widget formatting ──
     property string clockFormat: "HH.mm"
     property string dateFormat: "ddd d MMM"
     property string dateLocale: "nl_NL"
     property bool showDate: true
     property int workspaceCount: 9
     property bool workspaceShowNumbers: false
-    property string volumeIconMode: "mixed"     // "icon" | "percent" | "both"
+    property string volumeIconMode: "icon"   // icon | percent | both
     property int mediaTitleMax: 25
 
-    // ── Per-panel sizes (width/height override) ────────────
     property var panelSizes: ({
             "media": {
                 "width": 520,
@@ -81,7 +87,7 @@ Singleton {
             }
         })
 
-    // ── Persistence ────────────────────────────────────────
+    // ── Persistence ──
     FileView {
         id: store
         path: root._file
@@ -95,38 +101,18 @@ Singleton {
         onTriggered: root._save()
     }
 
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "fontFamily", "iconFont", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
+    readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg"]
+
     function _save() {
-        const data = {
-            barPosition: root.barPosition,
-            barHeight: root.barHeight,
-            barMargin: root.barMargin,
-            barRadius: root.barRadius,
-            barInset: root.barInset,
-            barGap: root.barGap,
-            barBg: String(root.barBg),
-            fgColor: String(root.fgColor),
-            accentColor: String(root.accentColor),
-            borderColor: String(root.borderColor),
-            panelBg: String(root.panelBg),
-            fontFamily: root.fontFamily,
-            panelWidth: root.panelWidth,
-            panelMaxHeight: root.panelMaxHeight,
-            panelMinHeight: root.panelMinHeight,
-            panelRadius: root.panelRadius,
-            leftWidgets: root.leftWidgets,
-            centerWidgets: root.centerWidgets,
-            rightWidgets: root.rightWidgets,
-            widgetDisabled: root.widgetDisabled,
-            clockFormat: root.clockFormat,
-            dateFormat: root.dateFormat,
-            dateLocale: root.dateLocale,
-            showDate: root.showDate,
-            workspaceCount: root.workspaceCount,
-            workspaceShowNumbers: root.workspaceShowNumbers,
-            volumeIconMode: root.volumeIconMode,
-            mediaTitleMax: root.mediaTitleMax,
-            panelSizes: root.panelSizes
-        };
+        const data = {};
+        _plainKeys.forEach(k => data[k] = root[k]);
+        _colorKeys.forEach(k => data[k] = String(root[k]));
+        data.leftWidgets = leftWidgets;
+        data.centerWidgets = centerWidgets;
+        data.rightWidgets = rightWidgets;
+        data.widgetDisabled = widgetDisabled;
+        data.panelSizes = panelSizes;
         store.setText(JSON.stringify(data, null, 2));
     }
 
@@ -139,25 +125,24 @@ Singleton {
         }
         if (!data || typeof data !== "object")
             return;
-        const set = (k, v) => {
-            if (v !== undefined && v !== null)
-                root[k] = v;
-        };
-        ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"].forEach(k => set(k, data[k]));
-        ["barBg", "fgColor", "accentColor", "borderColor", "panelBg"].forEach(k => {
+        _plainKeys.forEach(k => {
+            if (data[k] !== undefined && data[k] !== null)
+                root[k] = data[k];
+        });
+        _colorKeys.forEach(k => {
             if (data[k])
-                set(k, data[k]);
+                root[k] = data[k];
         });
         if (Array.isArray(data.leftWidgets))
-            set("leftWidgets", data.leftWidgets);
+            leftWidgets = data.leftWidgets;
         if (Array.isArray(data.centerWidgets))
-            set("centerWidgets", data.centerWidgets);
+            centerWidgets = data.centerWidgets;
         if (Array.isArray(data.rightWidgets))
-            set("rightWidgets", data.rightWidgets);
+            rightWidgets = data.rightWidgets;
         if (data.widgetDisabled)
-            set("widgetDisabled", data.widgetDisabled);
+            widgetDisabled = data.widgetDisabled;
         if (data.panelSizes)
-            set("panelSizes", data.panelSizes);
+            panelSizes = data.panelSizes;
         _ensureAllPlaced();
     }
 
@@ -168,7 +153,7 @@ Singleton {
             rightWidgets = rightWidgets.concat(missing);
     }
 
-    // ── Widget manipulation helpers ────────────────────────
+    // ── Helpers ──
     function save() {
         saveTimer.restart();
     }
@@ -204,18 +189,15 @@ Singleton {
             return "left";
         if (centerWidgets.indexOf(name) >= 0)
             return "center";
-        if (rightWidgets.indexOf(name) >= 0)
-            return "right";
         return "right";
     }
     function moveToZone(name, toZone) {
         const from = zoneOf(name);
         if (from === toZone)
             return;
-        const fromKey = from + "Widgets", toKey = toZone + "Widgets";
-        root[fromKey] = root[fromKey].filter(w => w !== name);
-        if (root[toKey].indexOf(name) < 0)
-            root[toKey] = root[toKey].concat([name]);
+        root[from + "Widgets"] = root[from + "Widgets"].filter(w => w !== name);
+        if (root[toZone + "Widgets"].indexOf(name) < 0)
+            root[toZone + "Widgets"] = root[toZone + "Widgets"].concat([name]);
         save();
     }
     function panelWidthFor(name) {
@@ -228,7 +210,6 @@ Singleton {
         return Math.min(h, panelMaxHeight);
     }
 
-    // autosave
     onBarPositionChanged: saveTimer.restart()
     onBarHeightChanged: saveTimer.restart()
     onBarMarginChanged: saveTimer.restart()
@@ -241,9 +222,7 @@ Singleton {
     onBorderColorChanged: saveTimer.restart()
     onPanelBgChanged: saveTimer.restart()
     onFontFamilyChanged: saveTimer.restart()
-    onPanelWidthChanged: saveTimer.restart()
-    onPanelMaxHeightChanged: saveTimer.restart()
-    onPanelMinHeightChanged: saveTimer.restart()
+    onIconFontChanged: saveTimer.restart()
     onPanelRadiusChanged: saveTimer.restart()
     onClockFormatChanged: saveTimer.restart()
     onDateFormatChanged: saveTimer.restart()
