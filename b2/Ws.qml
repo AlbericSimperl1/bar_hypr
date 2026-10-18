@@ -47,7 +47,7 @@ Item {
                 width: root.vertical ? thick : len
                 height: root.vertical ? len : thick
                 radius: Config.workspaceShowNumbers ? 4 : 2
-                color: isActive ? "#99ffffff" : (hovered ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(1, 1, 1, 0.25))
+                color: isActive ? "#fff7e5" : (hovered ? "#99fff7e5" : "#55fff7e5")
 
                 Behavior on width {
                     NumberAnimation {

@@ -60,20 +60,7 @@ Item {
     }
 
     function iconFor(d) {
-        const i = String(d.icon || "").toLowerCase();
-        if (i.indexOf("headset") >= 0 || i.indexOf("headphone") >= 0 || i.indexOf("audio") >= 0)
-            return "\udb80\udecb";
-        if (i.indexOf("keyboard") >= 0)
-            return "\udb80\udf0c";
-        if (i.indexOf("mouse") >= 0)
-            return "\udb80\udf7d";
-        if (i.indexOf("gaming") >= 0 || i.indexOf("joystick") >= 0)
-            return "\udb80\udeb4";
-        if (i.indexOf("phone") >= 0)
-            return "\udb80\udff2";
-        if (i.indexOf("computer") >= 0 || i.indexOf("laptop") >= 0)
-            return "\udb80\udf79";
-        return "\udb80\udcaf";
+        return BtIcons.iconFor(d);
     }
 
     function scheduleRebuild() {

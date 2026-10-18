@@ -2,9 +2,11 @@ singleton Config Config.qml
 singleton BarState BarState.qml
 singleton WidgetRegistry WidgetRegistry.qml
 singleton Notifications Notifications.qml
+singleton BtIcons BtIcons.qml
 
 BarContent BarContent.qml
 BatteryPill BatteryPill.qml
+BluetoothIcon BluetoothIcon.qml
 BluetoothPanel2 BluetoothPanel2.qml
 Brightness Brightness.qml
 BrightnessPanel BrightnessPanel.qml

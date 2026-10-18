@@ -85,15 +85,9 @@ Singleton {
         }
     }
 
-    // size = pixelSize from the old bar, dy = vertical nudge if a glyph sits high/low
     Component {
         id: bluetoothComp
-        PanelIcon {
-            panel: "bluetooth"
-            glyph: "\uf293"
-            size: 22
-            dy: 0
-        }
+        BluetoothIcon {}
     }
 
     Component {
