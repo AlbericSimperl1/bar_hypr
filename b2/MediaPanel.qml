@@ -25,7 +25,40 @@ Item {
     // -------------------------------------------------------------
     // PIPEWIRE AUDIO OUTPUT DEVICE
     // -------------------------------------------------------------
+    // readonly property string audioDeviceName: {
+    //     const sink = Pipewire.defaultAudioSink;
+    //     if (!sink)
+    //         return "Default Output";
+    //     return sink.description || sink.nickname || sink.name || "Default Output";
+    // }
+
+    // Add near the top of root
+    property string activeSinkDescription: ""
+
+    Process {
+        id: activeSinkProc
+        running: false
+        command: ["bash", "-c", "pactl list sink-inputs 2>/dev/null | awk '" + "/^Sink Input #[0-9]+$/ { si=$3; sub(/#/, \"\", si) } " + "/^[[:space:]]+Sink: [0-9]+$/ { s[si]=$2 } " + "/^[[:space:]]+Corked: no$/ { playing[si]=1 } " + "END { for (i in playing) if (s[i]) { print s[i]; exit } }' " + "| while read sink; do " + "  pactl list sinks 2>/dev/null | awk -v s=\"$sink\" '" + "    $0 == \"Sink #\"s { found=1; next } " + "    found && /^[[:space:]]+Description: / { sub(/^[[:space:]]+Description: /, \"\"); print; exit } " + "    found && /^Sink #[0-9]+$/ { exit }'; " + "done"]
+        stdout: SplitParser {
+            onRead: line => {
+                const t = line.trim();
+                if (t && t !== root.activeSinkDescription)
+                    root.activeSinkDescription = t;
+            }
+        }
+    }
+
+    Timer {
+        interval: 2000
+        repeat: true
+        running: root.hasPlayer
+        onTriggered: activeSinkProc.running = true
+    }
+
+    // Replace audioDeviceName with:
     readonly property string audioDeviceName: {
+        if (root.activeSinkDescription)
+            return root.activeSinkDescription;
         const sink = Pipewire.defaultAudioSink;
         if (!sink)
             return "Default Output";
