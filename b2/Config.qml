@@ -89,6 +89,11 @@ Singleton {
     property string volumeIconMode: "icon"   // icon | percent | both
     property int mediaTitleMax: 25
 
+    // stat widgets: percent | used | usedTotal | both
+    property string cpuFormat: "percent"
+    property string ramFormat: "percent"
+    property string gpuFormat: "percent"
+
     // ── Settings icon ──
     property string settingsIcon: "\uf1de"
     property int settingsIconSize: 22
@@ -141,7 +146,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "settingsIcon", "settingsIconSize"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "cpuFormat", "ramFormat", "gpuFormat", "settingsIcon", "settingsIconSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -329,6 +334,9 @@ Singleton {
     onWorkspaceShowNumbersChanged: saveTimer.restart()
     onVolumeIconModeChanged: saveTimer.restart()
     onMediaTitleMaxChanged: saveTimer.restart()
+    onCpuFormatChanged: saveTimer.restart()
+    onRamFormatChanged: saveTimer.restart()
+    onGpuFormatChanged: saveTimer.restart()
     onSettingsIconChanged: saveTimer.restart()
     onSettingsIconSizeChanged: saveTimer.restart()
 

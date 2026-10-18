@@ -34,6 +34,57 @@ Item {
         }
     ]
 
+    // stat widget display formats
+    readonly property var statWidgets: [
+        {
+            key: "cpu",
+            label: "CPU display"
+        },
+        {
+            key: "ram",
+            label: "RAM display"
+        },
+        {
+            key: "gpu",
+            label: "GPU display"
+        }
+    ]
+    readonly property var statFormats: [
+        {
+            key: "percent",
+            label: "percent"
+        },
+        {
+            key: "used",
+            label: "used"
+        },
+        {
+            key: "usedTotal",
+            label: "used/total"
+        },
+        {
+            key: "both",
+            label: "both"
+        }
+    ]
+
+    function statFormat(w) {
+        if (w === "cpu")
+            return Config.cpuFormat;
+        if (w === "ram")
+            return Config.ramFormat;
+        return Config.gpuFormat;
+    }
+    function setStatFormat(w, f) {
+        if (w === "cpu")
+            Config.cpuFormat = f;
+        else if (w === "ram")
+            Config.ramFormat = f;
+        else
+            Config.gpuFormat = f;
+        Config.save();
+    }
+
     function setPanelSize(name, key, v) {
         const next = Object.assign({}, Config.panelSizes);
         const cur = Object.assign({}, next[name] || {});
@@ -529,6 +580,39 @@ Item {
                         to: 100
                         value: Config.mediaTitleMax
                         onMoved: v => Config.mediaTitleMax = Math.round(v)
+                    }
+
+                    SLbl {
+                        text: "SYSTEM STATS"
+                        Layout.topMargin: 8
+                    }
+
+                    Repeater {
+                        model: root.statWidgets
+                        delegate: RowLayout {
+                            id: statRow
+                            required property var modelData
+                            readonly property string wkey: modelData.key
+                            spacing: 6
+                            Layout.fillWidth: true
+
+                            SLbl {
+                                text: statRow.modelData.label
+                            }
+                            Repeater {
+                                model: root.statFormats
+                                delegate: SChip {
+                                    required property var modelData
+                                    implicitWidth: 80
+                                    label: modelData.label
+                                    sel: root.statFormat(statRow.wkey) === modelData.key
+                                    onActivated: root.setStatFormat(statRow.wkey, modelData.key)
+                                }
+                            }
+                            Item {
+                                Layout.fillWidth: true
+                            }
+                        }
                     }
                 }
             }
