@@ -94,7 +94,7 @@ Item {
         Text {
             visible: root.isOpen
             Layout.alignment: Qt.AlignVCenter
-            text: "\udb80\udd43"
+            text: Config.chevron
             color: Config.fgColor
             font.family: Config.iconFont
             font.pixelSize: 22

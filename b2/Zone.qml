@@ -6,12 +6,16 @@ GridLayout {
     id: zoneRoot
     property string zone: "left"
     readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
+    readonly property int n: Math.max(1, rep.count)
 
-    columns: vertical ? 1 : 64
+    flow: vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+    rows: vertical ? n : 1
+    columns: vertical ? 1 : n
     rowSpacing: Config.widgetSpacing
     columnSpacing: Config.widgetSpacing
 
     Repeater {
+        id: rep
         model: Config.widgetsForZone(zoneRoot.zone)
 
         delegate: Loader {

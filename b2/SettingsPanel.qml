@@ -145,9 +145,9 @@ Item {
                     }
 
                     SSlider {
-                        label: "Bar height"
-                        from: 16
-                        to: 60
+                        label: "Bar thickness"
+                        from: 12
+                        to: 120
                         suffix: "px"
                         value: Config.barHeight
                         onMoved: v => Config.barHeight = Math.round(v)
@@ -155,7 +155,7 @@ Item {
                     SSlider {
                         label: "Edge margin"
                         from: 0
-                        to: 48
+                        to: 200
                         suffix: "px"
                         value: Config.barMargin
                         onMoved: v => Config.barMargin = Math.round(v)
@@ -163,7 +163,7 @@ Item {
                     SSlider {
                         label: "Side margin"
                         from: 0
-                        to: 600
+                        to: 2400
                         suffix: "px"
                         value: Config.barSideMargin
                         onMoved: v => Config.barSideMargin = Math.round(v)
@@ -171,7 +171,7 @@ Item {
                     SSlider {
                         label: "Border width"
                         from: 0
-                        to: 6
+                        to: 12
                         suffix: "px"
                         value: Config.borderWidth
                         onMoved: v => {
@@ -183,7 +183,7 @@ Item {
                     SSlider {
                         label: "Bar inset"
                         from: 0
-                        to: 48
+                        to: 300
                         suffix: "px"
                         value: Config.barInset
                         onMoved: v => Config.barInset = Math.round(v)
@@ -191,7 +191,7 @@ Item {
                     SSlider {
                         label: "Bar rounding"
                         from: 0
-                        to: 24
+                        to: 60
                         suffix: "px"
                         value: Config.barRadius
                         onMoved: v => Config.barRadius = Math.round(v)
@@ -199,7 +199,7 @@ Item {
                     SSlider {
                         label: "Panel gap"
                         from: 0
-                        to: 24
+                        to: 80
                         suffix: "px"
                         value: Config.barGap
                         onMoved: v => Config.barGap = Math.round(v)
@@ -207,7 +207,7 @@ Item {
                     SSlider {
                         label: "Panel rounding"
                         from: 0
-                        to: 20
+                        to: 60
                         suffix: "px"
                         value: Config.panelRadius
                         onMoved: v => Config.panelRadius = Math.round(v)
@@ -223,23 +223,23 @@ Item {
                     SSlider {
                         label: "Widget spacing"
                         from: 0
-                        to: 40
+                        to: 100
                         suffix: "px"
                         value: Config.widgetSpacing
                         onMoved: v => Config.widgetSpacing = Math.round(v)
                     }
                     SSlider {
                         label: "Font size"
-                        from: 60
-                        to: 200
+                        from: 40
+                        to: 300
                         suffix: "%"
                         value: Config.fontScalePct
                         onMoved: v => Config.fontScalePct = Math.round(v)
                     }
                     SSlider {
                         label: "Icon size"
-                        from: 60
-                        to: 200
+                        from: 40
+                        to: 300
                         suffix: "%"
                         value: Config.iconScalePct
                         onMoved: v => Config.iconScalePct = Math.round(v)
@@ -262,7 +262,7 @@ Item {
                     SSlider {
                         label: "Island padding"
                         from: 0
-                        to: 40
+                        to: 100
                         suffix: "px"
                         value: Config.islandPadding
                         onMoved: v => Config.islandPadding = Math.round(v)
@@ -270,7 +270,7 @@ Item {
                     SSlider {
                         label: "Island inset"
                         from: 0
-                        to: 16
+                        to: 40
                         suffix: "px"
                         value: Config.islandInset
                         onMoved: v => Config.islandInset = Math.round(v)
@@ -278,7 +278,7 @@ Item {
                     SSlider {
                         label: "Island rounding"
                         from: 0
-                        to: 24
+                        to: 60
                         suffix: "px"
                         value: Config.islandRadius
                         onMoved: v => Config.islandRadius = Math.round(v)
@@ -329,7 +329,7 @@ Item {
                     }
                 }
 
-                // ── WIDGETS ──
+                // ── WIDGETS (zones follow bar orientation) ──
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 6
@@ -344,7 +344,7 @@ Item {
                             spacing: 4
 
                             SLbl {
-                                text: zcol.modelData.toUpperCase() + " ZONE"
+                                text: Config.zoneLabel(zcol.modelData) + " ZONE"
                                 Layout.topMargin: 6
                             }
 
@@ -361,7 +361,7 @@ Item {
 
                             Text {
                                 visible: zcol.list.length === 0
-                                text: "empty - move a widget here with L / C / R"
+                                text: "empty - move a widget here with " + (Config.vertical ? "T / M / B" : "L / C / R")
                                 color: "#66fff7e5"
                                 font.family: Config.fontFamily
                                 font.pixelSize: 12
@@ -404,7 +404,7 @@ Item {
                             }
                             SSlider {
                                 label: "Width"
-                                from: 320
+                                from: 240
                                 to: 800
                                 suffix: "px"
                                 value: root.panelSize(pcol.modelData, "width", 480)
@@ -412,7 +412,7 @@ Item {
                             }
                             SSlider {
                                 label: "Height"
-                                from: 140
+                                from: 100
                                 to: 650
                                 suffix: "px"
                                 value: root.panelSize(pcol.modelData, "height", 650)
@@ -472,8 +472,8 @@ Item {
                     }
                     SSlider {
                         label: "Media title chars"
-                        from: 10
-                        to: 60
+                        from: 5
+                        to: 100
                         value: Config.mediaTitleMax
                         onMoved: v => Config.mediaTitleMax = Math.round(v)
                     }

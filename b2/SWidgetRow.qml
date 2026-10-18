@@ -29,18 +29,19 @@ Rectangle {
             Layout.fillWidth: true
         }
 
+        // zone buttons: L C R on horizontal bars, T M B on vertical bars
         SIconBtn {
-            glyph: "L"
+            glyph: Config.zoneGlyph("left")
             active: wr.zone === "left"
             onActivated: Config.moveToZone(wr.widgetName, "left")
         }
         SIconBtn {
-            glyph: "C"
+            glyph: Config.zoneGlyph("center")
             active: wr.zone === "center"
             onActivated: Config.moveToZone(wr.widgetName, "center")
         }
         SIconBtn {
-            glyph: "R"
+            glyph: Config.zoneGlyph("right")
             active: wr.zone === "right"
             onActivated: Config.moveToZone(wr.widgetName, "right")
         }
@@ -49,12 +50,13 @@ Rectangle {
             Layout.preferredWidth: 6
         }
 
+        // order buttons: left/right on horizontal bars, up/down on vertical bars
         SIconBtn {
-            glyph: "\u25b2"
+            glyph: Config.vertical ? "\u25b2" : "\u25c0"
             onActivated: Config.moveInZone(wr.widgetName, -1, wr.zone)
         }
         SIconBtn {
-            glyph: "\u25bc"
+            glyph: Config.vertical ? "\u25bc" : "\u25b6"
             onActivated: Config.moveInZone(wr.widgetName, 1, wr.zone)
         }
 

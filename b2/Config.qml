@@ -17,8 +17,25 @@ Singleton {
     property int barRadius: 0
     property int barInset: 18            // content padding along the bar
     property int barGap: 8               // gap between bar and panel
-    property int barSideMargin: 0        // inset from the two ends of the bar
+    property int barSideMargin: 0        // inset from the two ends of the bar (notch mode)
     property int borderWidth: 0
+
+    readonly property bool vertical: barPosition === "left" || barPosition === "right"
+
+    // chevron that points at the screen edge the bar sits on
+    readonly property string chevron: barPosition === "top" ? "\udb80\udd43" : barPosition === "bottom" ? "\udb80\udd40" : barPosition === "left" ? "\udb80\udd41" : "\udb80\udd42"
+
+    // zone naming follows the bar orientation (internal keys stay left/center/right)
+    function zoneLabel(z) {
+        if (vertical)
+            return z === "left" ? "TOP" : (z === "center" ? "MIDDLE" : "BOTTOM");
+        return z.toUpperCase();
+    }
+    function zoneGlyph(z) {
+        if (vertical)
+            return z === "left" ? "T" : (z === "center" ? "M" : "B");
+        return z === "left" ? "L" : (z === "center" ? "C" : "R");
+    }
 
     // ── Look & feel ──
     property int widgetSpacing: 14

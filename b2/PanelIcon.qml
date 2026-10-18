@@ -20,7 +20,7 @@ Item {
         anchors.verticalCenterOffset: ic.isOpen ? 0 : ic.dy
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
-        text: ic.isOpen ? "\udb80\udd43" : ic.glyph
+        text: ic.isOpen ? Config.chevron : ic.glyph
         color: Config.fgColor
         font.family: Config.iconFont
         font.pixelSize: Math.round((ic.isOpen ? 22 : ic.size) * Config.iconScale)

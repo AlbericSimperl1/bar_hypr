@@ -30,10 +30,13 @@ ShellRoot {
                 readonly property bool horizontal: pos === "top" || pos === "bottom"
                 readonly property real bt: Config.barHeight
 
-                readonly property real barX: horizontal ? 0 : (pos === "left" ? 0 : width - bt)
-                readonly property real barY: horizontal ? (pos === "top" ? 0 : height - bt) : 0
-                readonly property real barW: horizontal ? width : bt
-                readonly property real barH: horizontal ? bt : height
+                // side margin is applied to the bar surface (not the window) so panels keep full room
+                readonly property real sideM: Math.max(0, Math.min(Config.barSideMargin, (horizontal ? width : height) / 2 - 60))
+
+                readonly property real barX: horizontal ? sideM : (pos === "left" ? 0 : width - bt)
+                readonly property real barY: horizontal ? (pos === "top" ? 0 : height - bt) : sideM
+                readonly property real barW: horizontal ? Math.max(0, width - 2 * sideM) : bt
+                readonly property real barH: horizontal ? bt : Math.max(0, height - 2 * sideM)
 
                 readonly property real panelW: Config.panelWidthFor(BarState.activePanel)
                 readonly property real contentH: {
@@ -78,10 +81,10 @@ ShellRoot {
                 anchors.left: horizontal ? true : (pos === "left")
                 anchors.right: horizontal ? true : (pos === "right")
 
-                margins.top: pos === "top" ? Config.barMargin : (horizontal ? 0 : Config.barSideMargin)
-                margins.bottom: pos === "bottom" ? Config.barMargin : (horizontal ? 0 : Config.barSideMargin)
-                margins.left: pos === "left" ? Config.barMargin : (horizontal ? Config.barSideMargin : 0)
-                margins.right: pos === "right" ? Config.barMargin : (horizontal ? Config.barSideMargin : 0)
+                margins.top: pos === "top" ? Config.barMargin : 0
+                margins.bottom: pos === "bottom" ? Config.barMargin : 0
+                margins.left: pos === "left" ? Config.barMargin : 0
+                margins.right: pos === "right" ? Config.barMargin : 0
 
                 exclusiveZone: Config.barHeight + 2
 
