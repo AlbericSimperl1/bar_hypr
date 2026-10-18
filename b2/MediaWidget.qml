@@ -87,7 +87,7 @@ Item {
             text: root.combo
             color: Config.fgColor
             font.family: Config.fontFamily
-            font.pixelSize: 14
+            font.pixelSize: Math.round(14 * Config.fontScale)
             elide: Text.ElideRight
         }
 

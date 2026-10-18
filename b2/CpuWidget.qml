@@ -53,14 +53,14 @@ Item {
             text: "cpu"
             color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
             font.family: Config.fontFamily
-            font.pixelSize: 15
+            font.pixelSize: Math.round(15 * Config.fontScale)
             Layout.alignment: Qt.AlignCenter
         }
         Text {
             text: String(root.pct).padStart(2, " ") + "%"
             color: Config.fgColor
             font.family: Config.fontFamily
-            font.pixelSize: 15
+            font.pixelSize: Math.round(15 * Config.fontScale)
             font.bold: true
             Layout.alignment: Qt.AlignCenter
         }

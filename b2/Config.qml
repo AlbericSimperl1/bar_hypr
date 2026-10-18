@@ -20,6 +20,18 @@ Singleton {
     property int barSideMargin: 0        // inset from the two ends of the bar
     property int borderWidth: 0
 
+    // ── Look & feel ──
+    property int widgetSpacing: 14
+    property int fontScalePct: 100
+    property int iconScalePct: 100
+    readonly property real fontScale: fontScalePct / 100
+    readonly property real iconScale: iconScalePct / 100
+    property bool islandsEnabled: false
+    property int islandPadding: 10       // along the bar
+    property int islandInset: 3          // gap to bar edges, across the bar
+    property int islandRadius: 6
+    property color islandColor: "#22ffffff"
+
     // ── Colors ──
     property color barBg: "#20000207"
     property color fgColor: "#fff7e5"
@@ -104,8 +116,8 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
-    readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax"]
+    readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
         const data = {};
@@ -236,6 +248,14 @@ Singleton {
     onBarGapChanged: saveTimer.restart()
     onBarSideMarginChanged: saveTimer.restart()
     onBorderWidthChanged: saveTimer.restart()
+    onWidgetSpacingChanged: saveTimer.restart()
+    onFontScalePctChanged: saveTimer.restart()
+    onIconScalePctChanged: saveTimer.restart()
+    onIslandsEnabledChanged: saveTimer.restart()
+    onIslandPaddingChanged: saveTimer.restart()
+    onIslandInsetChanged: saveTimer.restart()
+    onIslandRadiusChanged: saveTimer.restart()
+    onIslandColorChanged: saveTimer.restart()
     onBarBgChanged: saveTimer.restart()
     onFgColorChanged: saveTimer.restart()
     onAccentColorChanged: saveTimer.restart()

@@ -63,6 +63,7 @@ Singleton {
         id: brightnessComp
         Brightness {
             fontFamily: Config.iconFont
+            iconSize: Math.round(29 * Config.iconScale)
             fgColor: Config.fgColor
             accentColor: Config.accentColor
             isOpen: BarState.activePanel === "brightness"
@@ -121,8 +122,8 @@ Singleton {
         id: settingsComp
         PanelIcon {
             panel: "settings"
-            glyph: "\udb81\udc93"
-            size: 24
+            glyph: "\uf1de"
+            size: 22
             dy: 0
         }
     }

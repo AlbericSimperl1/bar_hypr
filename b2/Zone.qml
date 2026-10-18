@@ -8,8 +8,8 @@ GridLayout {
     readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
 
     columns: vertical ? 1 : 64
-    rowSpacing: 14
-    columnSpacing: 14
+    rowSpacing: Config.widgetSpacing
+    columnSpacing: Config.widgetSpacing
 
     Repeater {
         model: Config.widgetsForZone(zoneRoot.zone)

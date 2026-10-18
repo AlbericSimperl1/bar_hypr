@@ -23,7 +23,7 @@ Item {
         text: ic.isOpen ? "\udb80\udd43" : ic.glyph
         color: Config.fgColor
         font.family: Config.iconFont
-        font.pixelSize: ic.isOpen ? 22 : ic.size
+        font.pixelSize: Math.round((ic.isOpen ? 22 : ic.size) * Config.iconScale)
     }
 
     Item {

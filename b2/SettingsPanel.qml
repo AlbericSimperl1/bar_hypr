@@ -13,6 +13,10 @@ Item {
             label: "Bar"
         },
         {
+            key: "style",
+            label: "Style"
+        },
+        {
             key: "colors",
             label: "Colors"
         },
@@ -210,6 +214,83 @@ Item {
                     }
                 }
 
+                // ── STYLE ──
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: root.tab === "style"
+
+                    SSlider {
+                        label: "Widget spacing"
+                        from: 0
+                        to: 40
+                        suffix: "px"
+                        value: Config.widgetSpacing
+                        onMoved: v => Config.widgetSpacing = Math.round(v)
+                    }
+                    SSlider {
+                        label: "Font size"
+                        from: 60
+                        to: 200
+                        suffix: "%"
+                        value: Config.fontScalePct
+                        onMoved: v => Config.fontScalePct = Math.round(v)
+                    }
+                    SSlider {
+                        label: "Icon size"
+                        from: 60
+                        to: 200
+                        suffix: "%"
+                        value: Config.iconScalePct
+                        onMoved: v => Config.iconScalePct = Math.round(v)
+                    }
+                    SField {
+                        label: "Font family"
+                        value: Config.fontFamily
+                        onCommitted: v => Config.fontFamily = v
+                    }
+
+                    SLbl {
+                        text: "ISLANDS"
+                        Layout.topMargin: 8
+                    }
+                    SToggle {
+                        label: "Enable islands"
+                        value: Config.islandsEnabled
+                        onToggled: v => Config.islandsEnabled = v
+                    }
+                    SSlider {
+                        label: "Island padding"
+                        from: 0
+                        to: 40
+                        suffix: "px"
+                        value: Config.islandPadding
+                        onMoved: v => Config.islandPadding = Math.round(v)
+                    }
+                    SSlider {
+                        label: "Island inset"
+                        from: 0
+                        to: 16
+                        suffix: "px"
+                        value: Config.islandInset
+                        onMoved: v => Config.islandInset = Math.round(v)
+                    }
+                    SSlider {
+                        label: "Island rounding"
+                        from: 0
+                        to: 24
+                        suffix: "px"
+                        value: Config.islandRadius
+                        onMoved: v => Config.islandRadius = Math.round(v)
+                    }
+                    SField {
+                        label: "Island color"
+                        isColor: true
+                        value: String(Config.islandColor)
+                        onCommitted: v => Config.islandColor = v
+                    }
+                }
+
                 // ── COLORS ──
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -245,11 +326,6 @@ Item {
                         isColor: true
                         value: String(Config.panelBg)
                         onCommitted: v => Config.panelBg = v
-                    }
-                    SField {
-                        label: "Font family"
-                        value: Config.fontFamily
-                        onCommitted: v => Config.fontFamily = v
                     }
                 }
 

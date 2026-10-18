@@ -52,8 +52,8 @@ Item {
             delegate: Rectangle {
                 required property int index
                 readonly property int level: root.vertical ? 3 - index : index + 1
-                Layout.preferredWidth: 6
-                Layout.preferredHeight: 6
+                Layout.preferredWidth: Math.round(6 * Config.iconScale)
+                Layout.preferredHeight: Math.round(6 * Config.iconScale)
                 radius: 6
                 color: root.activeDots >= level ? Qt.rgba(1, 1, 1, 0.95) : Qt.rgba(1, 1, 1, 0.25)
                 Behavior on color {

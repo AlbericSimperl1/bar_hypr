@@ -30,3 +30,4 @@ SToggle SToggle.qml
 SField SField.qml
 SIconBtn SIconBtn.qml
 SWidgetRow SWidgetRow.qml
+Island Island.qml
