@@ -53,6 +53,8 @@ ShellRoot {
                         return powerPanel.neededHeight;
                     case "brightness":
                         return brightnessPanel.neededHeight;
+                    case "volume":
+                        return volumePanel.neededHeight;
                     case "settings":
                         return Config.panelHeightFor("settings", 620);
                     }
@@ -75,6 +77,14 @@ ShellRoot {
                     const maxTop = height - inset - panelH;
                     return Math.max(inset, Math.min(BarState.clickY - panelH / 2, maxTop));
                 }
+
+                // border sides: "pos" is the screen-edge side, "inner" faces the panels, "ends" are the two bar ends
+                readonly property string inner: ({ top: "bottom", bottom: "top", left: "right", right: "left" })[pos]
+                readonly property var ends: horizontal ? ["left", "right"] : ["top", "bottom"]
+                readonly property var barBorderSides: Config.borderUnderline ? [inner] : [inner].concat(Config.barMargin > 0 ? [pos] : [], sideM > 0 ? ends : [])
+                readonly property var panelBorderSides: ends.concat([inner], !Config.borderUnderline && Config.barGap > 0 ? [pos] : [])
+                // a panel touching the bar opens the bar's inner line so both outlines read as one
+                readonly property bool panelJoined: BarState.panelOpen && Config.barGap === 0
 
                 anchors.top: horizontal ? (pos === "top") : true
                 anchors.bottom: horizontal ? (pos === "bottom") : true
@@ -155,8 +165,15 @@ ShellRoot {
                         height: win.barH
                         color: Config.barBg
                         radius: Config.barRadius
-                        border.color: Config.borderColor
-                        border.width: Config.borderWidth
+
+                        Border {
+                            anchors.fill: parent
+                            radius: Config.barRadius
+                            sides: win.barBorderSides
+                            cutSide: win.panelJoined ? win.inner : ""
+                            cutFrom: (win.horizontal ? win.panelX - win.barX : win.panelY - win.barY) + Config.borderWidth
+                            cutTo: (win.horizontal ? win.panelX + win.panelW - win.barX : win.panelY + win.panelH - win.barY) - Config.borderWidth
+                        }
 
                         Item {
                             anchors.fill: parent
@@ -180,9 +197,13 @@ ShellRoot {
                         visible: BarState.panelOpen
                         color: Config.panelBg
                         radius: Config.panelRadius
-                        border.color: Config.borderColor
-                        border.width: Config.borderWidth
                         clip: true
+
+                        Border {
+                            anchors.fill: parent
+                            radius: Config.panelRadius
+                            sides: win.panelBorderSides
+                        }
 
                         Item {
                             anchors.fill: parent
@@ -238,6 +259,15 @@ ShellRoot {
                                 id: brightnessPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "brightness"
+                                fgColor: Config.fgColor
+                                accentColor: Config.accentColor
+                                fontFamily: Config.fontFamily
+                            }
+
+                            VolumePanel {
+                                id: volumePanel
+                                anchors.fill: parent
+                                visible: BarState.activePanel === "volume"
                                 fgColor: Config.fgColor
                                 accentColor: Config.accentColor
                                 fontFamily: Config.fontFamily

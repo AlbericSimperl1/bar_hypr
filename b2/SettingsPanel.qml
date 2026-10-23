@@ -243,6 +243,11 @@ Item {
                             Config.borderWidth = Math.round(v);
                         }
                     }
+                    SToggle {
+                        label: "Underline border"
+                        value: Config.borderUnderline
+                        onToggled: v => Config.borderUnderline = v
+                    }
                     SSlider {
                         label: "Bar inset"
                         from: 0
@@ -491,7 +496,7 @@ Item {
                     }
 
                     Repeater {
-                        model: ["media", "bluetooth", "wifi", "notifications", "power", "brightness", "settings"]
+                        model: ["media", "bluetooth", "wifi", "notifications", "power", "brightness", "volume", "settings"]
                         delegate: ColumnLayout {
                             id: pcol
                             required property string modelData

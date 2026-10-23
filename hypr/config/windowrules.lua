@@ -156,11 +156,10 @@ hl.layer_rule({
 })
 
 
+
+-- rust-launcher: blur vraagt de launcher zelf aan (GTK backdrop-filter -> ext-background-effect)
 hl.layer_rule({
-    name = "rust-launcher-blur",
-    match = { namespace = "^rust-launcher$" },
-    blur = true,
-    blur_popups = true,
-    ignore_alpha = 0.1,
-    -- dim_around = true
+    name = "rust-launcher",
+    match = { namespace = "rust-launcher" },
+    no_anim = true
 })

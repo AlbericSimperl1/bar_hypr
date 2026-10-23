@@ -37,12 +37,26 @@ Item {
         return 1;
     }
 
-    implicitWidth: grid.implicitWidth
+    readonly property bool isOpen: BarState.activePanel === "wifi"
+
+    // same width open or closed; both stay laid out (opacity, not visible) so their sizes never drop to 0
+    implicitWidth: Math.max(chevron.implicitWidth, grid.implicitWidth)
     implicitHeight: Math.max(24, grid.implicitHeight)
+
+    Text {
+        id: chevron
+        anchors.centerIn: parent
+        opacity: root.isOpen ? 1 : 0
+        text: Config.chevron
+        color: Config.fgColor
+        font.family: Config.iconFont
+        font.pixelSize: Math.round(22 * Config.iconScale)
+    }
 
     GridLayout {
         id: grid
         anchors.centerIn: parent
+        opacity: root.isOpen ? 0 : 1
         columns: root.vertical ? 1 : 3
         rowSpacing: 3
         columnSpacing: 3

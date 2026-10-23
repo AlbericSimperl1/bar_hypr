@@ -223,6 +223,115 @@ Item {
         });
     }
 
+    // stats for the active connection (wifi or ethernet); polled only while the panel is open
+    property var linkStats: Model.connectionStats({})
+    property var throughput: ({})
+
+    Process {
+        id: statsProc
+        command: ["bash", "-c", Model.connectionStatsScript, "stats", wifiPanelRoot.kind]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const kv = Model.parseKeyValue(text);
+                wifiPanelRoot.linkStats = Model.connectionStats(kv);
+                wifiPanelRoot.throughput = Model.throughputState(wifiPanelRoot.throughput, kv, Date.now() / 1000);
+            }
+        }
+    }
+
+    Timer {
+        interval: 2000
+        repeat: true
+        triggeredOnStart: true
+        running: wifiPanelRoot.visible && wifiPanelRoot.kind !== "disconnected"
+        onTriggered: statsProc.running = true
+        // a stale sample would show a huge spike on reopen
+        onRunningChanged: if (!running)
+            wifiPanelRoot.throughput = {}
+    }
+
+    // last speed test result: ping (ms), down / up (bytes/s), at (Date) or error; kept until the next run
+    property var speedTest: ({})
+
+    Process {
+        id: speedTestProc
+        command: ["bash", "-c", Model.speedTestScript]
+        stdout: SplitParser {
+            onRead: line => {
+                const kv = Model.parseKeyValue(line);
+                wifiPanelRoot.speedTest = Object.assign({}, wifiPanelRoot.speedTest, kv);
+            }
+        }
+        onExited: exitCode => {
+            if (exitCode === 0)
+                wifiPanelRoot.speedTest = Object.assign({}, wifiPanelRoot.speedTest, {
+                    at: new Date()
+                });
+            else if (!wifiPanelRoot.speedTest.error)
+                wifiPanelRoot.speedTest = Object.assign({}, wifiPanelRoot.speedTest, {
+                    error: "failed"
+                });
+        }
+    }
+
+    // label / value / detail cell for the wifi stats grid
+    component StatBox: ColumnLayout {
+        property string label
+        property string value
+        property string detail
+        property real fraction: -1 // 0..1 draws a bar under the value
+        spacing: 2
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1 // equal columns
+
+        Text {
+            text: parent.label
+            color: wifiPanelRoot.dimColor
+            font.family: wifiPanelRoot.fontFamily
+            font.pixelSize: 10
+            font.capitalization: Font.AllUppercase
+        }
+        Text {
+            text: parent.value || "—"
+            color: wifiPanelRoot.fgColor
+            font.family: wifiPanelRoot.fontFamily
+            font.pixelSize: 13
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
+        Rectangle {
+            visible: parent.fraction >= 0
+            Layout.fillWidth: true
+            Layout.topMargin: 2
+            Layout.bottomMargin: 2
+            implicitHeight: 3
+            radius: 2
+            color: wifiPanelRoot.lineColor
+
+            Rectangle {
+                height: parent.height
+                radius: 2
+                // a sliver stays visible for tiny non-zero values
+                width: parent.parent.fraction > 0 ? Math.max(2, parent.width * Math.min(1, parent.parent.fraction)) : 0
+                color: wifiPanelRoot.accentColor
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 300
+                    }
+                }
+            }
+        }
+        Text {
+            text: parent.detail
+            visible: text !== ""
+            color: wifiPanelRoot.dimColor
+            font.family: wifiPanelRoot.fontFamily
+            font.pixelSize: 11
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
+    }
+
     Process {
         id: enterpriseConnect
         property string secret: ""
@@ -422,58 +531,79 @@ Item {
                         }
                     }
 
-                    // Trace line
-                    Rectangle {
+                    // Live stats for the active connection
+                    GridLayout {
                         Layout.fillWidth: true
-                        height: 1
-                        color: wifiPanelRoot.lineColor
+                        Layout.leftMargin: 28 // line up with the connection name
+                        Layout.bottomMargin: 14
+                        columns: 2
+                        columnSpacing: 16
+                        rowSpacing: 12
+
+                        // wifi strength, also while ethernet is active (then it's the standby network's)
+                        StatBox {
+                            readonly property bool wifi: wifiPanelRoot.kind === "wifi"
+                            label: wifi ? "Signal" : "Wi-Fi signal"
+                            value: wifiPanelRoot.signalStrength >= 0 ? wifiPanelRoot.signalStrength + "%" : ""
+                            fraction: wifiPanelRoot.signalStrength / 100
+                            // detail: wifi ? [wifiPanelRoot.linkStats.signal, wifiPanelRoot.linkStats.quality].filter(t => t).join(" · ") : (wifiPanelRoot.connectedWifiNetwork ? wifiPanelRoot.connectedWifiNetwork.name + " · standby" : "")
+                        }
+                        StatBox {
+                            label: "Link speed"
+                            value: wifiPanelRoot.linkStats.link
+                            // detail: wifiPanelRoot.linkStats.linkDetail
+                        }
+                        StatBox {
+                            label: "Traffic"
+                            value: wifiPanelRoot.throughput.prevSampleTime ? "↓ " + Model.formatBits(wifiPanelRoot.throughput.downloadRate) + "  ↑ " + Model.formatBits(wifiPanelRoot.throughput.uploadRate) : ""
+                            // detail: wifiPanelRoot.linkStats.session
+                        }
+                        StatBox {
+                            label: "IP address"
+                            value: wifiPanelRoot.linkStats.ip
+                            // detail: wifiPanelRoot.linkStats.gateway
+                        }
                     }
-                }
 
-                // --- SECTION 2: DNS PROVIDER ---
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    Text {
-                        text: "DNS Provider"
-                        color: wifiPanelRoot.dimColor
-                        font.family: wifiPanelRoot.fontFamily
-                        font.pixelSize: 13
-                        font.capitalization: Font.AllUppercase
-                        Layout.fillWidth: true
-                        Layout.topMargin: 6
-                        Layout.bottomMargin: 12
-                    }
-
+                    // Speed test (on demand)
                     RowLayout {
                         Layout.fillWidth: true
-                        Layout.bottomMargin: 12
-                        spacing: 12
+                        Layout.leftMargin: 28
+                        Layout.bottomMargin: 14
+                        spacing: 16
 
-                        Repeater {
-                            model: ["DHCP", "Cloudflare", "Google", "Custom"]
-
-                            delegate: Text {
-                                required property string modelData
-                                text: modelData
-                                color: dnsMa.containsMouse ? wifiPanelRoot.fgColor : (wifiPanelRoot.dnsProvider === modelData ? wifiPanelRoot.accentColor : wifiPanelRoot.dimColor)
-                                font.family: wifiPanelRoot.fontFamily
-                                font.pixelSize: 13
-                                font.bold: wifiPanelRoot.dnsProvider === modelData
-
-                                MouseArea {
-                                    id: dnsMa
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
-                                    onClicked: wifiPanelRoot.dnsProvider = parent.modelData
-                                }
+                        StatBox {
+                            label: "Speed test"
+                            value: Model.speedTestSummary(wifiPanelRoot.speedTest)
+                            detail: {
+                                const t = wifiPanelRoot.speedTest;
+                                if (speedTestProc.running)
+                                    return !t.ping ? "Measuring ping…" : !t.down ? "Measuring download…" : "Measuring upload…";
+                                if (t.error)
+                                    return "Couldn't reach Cloudflare";
+                                // return t.at ? "Cloudflare · " + Qt.formatTime(t.at, "HH:mm") : "Uses ~120 MB";
                             }
                         }
 
-                        Item {
-                            Layout.fillWidth: true
+                        Text {
+                            Layout.alignment: Qt.AlignTop
+                            text: speedTestProc.running ? "Testing…" : (wifiPanelRoot.speedTest.at ? "Run again" : "Run")
+                            color: speedTestProc.running ? wifiPanelRoot.dimColor : (runTestMa.containsMouse ? wifiPanelRoot.fgColor : wifiPanelRoot.accentColor)
+                            font.family: wifiPanelRoot.fontFamily
+                            font.pixelSize: 13
+
+                            MouseArea {
+                                id: runTestMa
+                                anchors.fill: parent
+                                anchors.margins: -6
+                                enabled: !speedTestProc.running
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onClicked: {
+                                    wifiPanelRoot.speedTest = {};
+                                    speedTestProc.running = true;
+                                }
+                            }
                         }
                     }
 
@@ -484,6 +614,61 @@ Item {
                         color: wifiPanelRoot.lineColor
                     }
                 }
+
+                // // --- SECTION 2: DNS PROVIDER ---
+                // ColumnLayout {
+                //     Layout.fillWidth: true
+                //     spacing: 0
+
+                //     Text {
+                //         text: "DNS Provider"
+                //         color: wifiPanelRoot.dimColor
+                //         font.family: wifiPanelRoot.fontFamily
+                //         font.pixelSize: 13
+                //         font.capitalization: Font.AllUppercase
+                //         Layout.fillWidth: true
+                //         Layout.topMargin: 6
+                //         Layout.bottomMargin: 12
+                //     }
+
+                //     RowLayout {
+                //         Layout.fillWidth: true
+                //         Layout.bottomMargin: 12
+                //         spacing: 12
+
+                //         Repeater {
+                //             model: ["DHCP", "Cloudflare", "Google", "Custom"]
+
+                //             delegate: Text {
+                //                 required property string modelData
+                //                 text: modelData
+                //                 color: dnsMa.containsMouse ? wifiPanelRoot.fgColor : (wifiPanelRoot.dnsProvider === modelData ? wifiPanelRoot.accentColor : wifiPanelRoot.dimColor)
+                //                 font.family: wifiPanelRoot.fontFamily
+                //                 font.pixelSize: 13
+                //                 font.bold: wifiPanelRoot.dnsProvider === modelData
+
+                //                 MouseArea {
+                //                     id: dnsMa
+                //                     anchors.fill: parent
+                //                     cursorShape: Qt.PointingHandCursor
+                //                     hoverEnabled: true
+                //                     onClicked: wifiPanelRoot.dnsProvider = parent.modelData
+                //                 }
+                //             }
+                //         }
+
+                //         Item {
+                //             Layout.fillWidth: true
+                //         }
+                //     }
+
+                //     // Trace line
+                //     Rectangle {
+                //         Layout.fillWidth: true
+                //         height: 1
+                //         color: wifiPanelRoot.lineColor
+                //     }
+                // }
 
                 // --- SECTION 3: WI-FI NETWORKS ---
                 ColumnLayout {

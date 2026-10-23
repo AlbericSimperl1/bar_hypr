@@ -1,73 +1,19 @@
-// MediaPanel.qml
+// MediaPanel.qml - album art left; title, artist and controls centred right; thin progress line along the bottom
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Mpris
-import Quickshell.Services.Pipewire
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
 
-    implicitWidth: 520
-    implicitHeight: 570
-
     property color fgColor: "#fff7e5"
-    property color mutedColor: Qt.rgba(1, 0.95, 0.82, 0.78)
     property color accentColor: "#ebd9b9"
-    property color cavaColor: "#bbbbbb"
+    property color dimColor: Qt.rgba(fgColor.r, fgColor.g, fgColor.b, 0.6)
     property string fontFamily: "mononoki"
-    property var player
-    property var cavaBars: []
 
-    // -------------------------------------------------------------
-    // PIPEWIRE AUDIO OUTPUT DEVICE
-    // -------------------------------------------------------------
-    // readonly property string audioDeviceName: {
-    //     const sink = Pipewire.defaultAudioSink;
-    //     if (!sink)
-    //         return "Default Output";
-    //     return sink.description || sink.nickname || sink.name || "Default Output";
-    // }
+    readonly property int artSize: 170
+    implicitHeight: artSize + 40
 
-    // Add near the top of root
-    property string activeSinkDescription: ""
-
-    Process {
-        id: activeSinkProc
-        running: false
-        command: ["bash", "-c", "pactl list sink-inputs 2>/dev/null | awk '" + "/^Sink Input #[0-9]+$/ { si=$3; sub(/#/, \"\", si) } " + "/^[[:space:]]+Sink: [0-9]+$/ { s[si]=$2 } " + "/^[[:space:]]+Corked: no$/ { playing[si]=1 } " + "END { for (i in playing) if (s[i]) { print s[i]; exit } }' " + "| while read sink; do " + "  pactl list sinks 2>/dev/null | awk -v s=\"$sink\" '" + "    $0 == \"Sink #\"s { found=1; next } " + "    found && /^[[:space:]]+Description: / { sub(/^[[:space:]]+Description: /, \"\"); print; exit } " + "    found && /^Sink #[0-9]+$/ { exit }'; " + "done"]
-        stdout: SplitParser {
-            onRead: line => {
-                const t = line.trim();
-                if (t && t !== root.activeSinkDescription)
-                    root.activeSinkDescription = t;
-            }
-        }
-    }
-
-    Timer {
-        interval: 2000
-        repeat: true
-        running: root.hasPlayer
-        onTriggered: activeSinkProc.running = true
-    }
-
-    // Replace audioDeviceName with:
-    readonly property string audioDeviceName: {
-        if (root.activeSinkDescription)
-            return root.activeSinkDescription;
-        const sink = Pipewire.defaultAudioSink;
-        if (!sink)
-            return "Default Output";
-        return sink.description || sink.nickname || sink.name || "Default Output";
-    }
-
-    // -------------------------------------------------------------
-    // MPRIS LOGICA
-    // -------------------------------------------------------------
     readonly property var ignoredPlayers: ["zen-browser", "firefox", "youtube"]
 
     readonly property var activePlayer: {
@@ -90,42 +36,19 @@ Item {
 
     readonly property bool hasPlayer: activePlayer !== null
     readonly property bool isPlaying: hasPlayer && activePlayer.isPlaying
+    readonly property bool canControl: hasPlayer && activePlayer.canControl
     readonly property string trackTitle: hasPlayer && activePlayer.trackTitle ? activePlayer.trackTitle : "No media playing"
-    readonly property string trackArtist: hasPlayer && activePlayer.trackArtist ? activePlayer.trackArtist : "Unknown or no artist"
+    readonly property string trackArtist: hasPlayer && activePlayer.trackArtist ? activePlayer.trackArtist : ""
     readonly property string artUrl: hasPlayer && activePlayer.trackArtUrl ? activePlayer.trackArtUrl : ""
     readonly property real trackLength: hasPlayer && activePlayer.lengthSupported ? Math.max(0, activePlayer.length) : 0
     readonly property bool canSeek: hasPlayer && activePlayer.canSeek && trackLength > 0
     property real trackPosition: 0
 
-    // -------------------------------------------------------------
-    // BAR ICON COMPONENT
-    // -------------------------------------------------------------
-    property Component barItem: Component {
-        Rectangle {
-            implicitWidth: 26
-            implicitHeight: 26
-            radius: 6
-            color: "transparent"
-            clip: true
-
-            Image {
-                id: barArt
-                anchors.fill: parent
-                source: root.artUrl
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: status === Image.Ready && root.artUrl !== ""
-            }
-
-            Text {
-                anchors.centerIn: parent
-                visible: !barArt.visible
-                text: "\uf001"
-                color: root.fgColor
-                font.family: root.fontFamily
-                font.pixelSize: 14
-            }
-        }
+    function formatTime(s) {
+        s = Math.max(0, Math.floor(s));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return m + ":" + (r < 10 ? "0" : "") + r;
     }
 
     function syncPosition() {
@@ -139,7 +62,7 @@ Item {
     Timer {
         interval: 500
         repeat: true
-        running: root.hasPlayer
+        running: root.hasPlayer && root.visible
         onTriggered: {
             if (root.isPlaying && root.trackLength > 0)
                 root.trackPosition = Math.min(root.trackLength, root.trackPosition + 0.5);
@@ -159,376 +82,174 @@ Item {
         }
     }
 
-    // -------------------------------------------------------------
-    // CAVA PROCESS INTEGRATIE
-    // -------------------------------------------------------------
-    Process {
-        id: cavaProc
-        running: root.isPlaying
-        command: ["bash", "-lc", "cfg=$(mktemp); " + "printf '%s\\n' '[general]' 'bars = 86' 'framerate = 60' 'sensitivity = 160' " + "'[input]' 'method = pipewire' '[output]' 'method = raw' 'raw_target = /dev/stdout' " + "'data_format = ascii' 'ascii_max_range = 12' 'bar_delimiter = 59' 'frame_delimiter = 10' 'channels = mono' " + "'[smoothing]' 'integral = 70' 'monstercat = 1' > \"$cfg\"; " + "cava -p \"$cfg\"; code=$?; rm -f \"$cfg\"; exit $code"]
+    RowLayout {
+        anchors.fill: parent
+        anchors.margins: 20
+        spacing: 20
 
-        stdout: SplitParser {
-            onRead: line => {
-                const parts = line.trim().split(";");
-                const vals = [];
-                for (let i = 0; i < parts.length; i++) {
-                    const v = parseInt(parts[i]);
-                    vals.push(isNaN(v) ? 0 : Math.max(0, Math.min(1, v / 12)));
+        // album cover
+        Item {
+            Layout.preferredWidth: root.artSize
+            Layout.preferredHeight: root.artSize
+            Layout.alignment: Qt.AlignVCenter
+
+            Image {
+                id: albumArt
+                anchors.fill: parent
+                source: root.artUrl
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                visible: status === Image.Ready && root.artUrl !== ""
+            }
+            Rectangle {
+                anchors.fill: parent
+                color: "#15ffffff"
+                border.color: "#20ffffff"
+                border.width: 1
+                visible: albumArt.status !== Image.Ready || root.artUrl === ""
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰎈"
+                    color: root.dimColor
+                    font.family: root.fontFamily
+                    font.pixelSize: 48
                 }
-                root.cavaBars = vals;
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 4
+
+            Text {
+                text: root.trackTitle
+                color: root.fgColor
+                font.family: root.fontFamily
+                font.pixelSize: 23
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+            Text {
+                text: root.trackArtist
+                visible: text !== ""
+                color: Qt.rgba(root.fgColor.r, root.fgColor.g, root.fgColor.b, 0.7)
+                font.family: root.fontFamily
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 14
+                spacing: 18
+
+                MediaBtn {
+                    player: root
+                    text: ""
+                    font.pixelSize: 28
+                    active: root.hasPlayer && root.activePlayer.shuffle
+                    enabledBtn: root.canControl && root.activePlayer.shuffleSupported
+                    opacity: enabledBtn ? (active ? 1 : 0.55) : 0.25
+                    onClicked: root.activePlayer.shuffle = !root.activePlayer.shuffle
+                }
+                MediaBtn {
+                    player: root
+                    text: ""
+                    font.pixelSize: 36
+                    onClicked: root.activePlayer.previous()
+                }
+                // primary action: filled circle
+                Rectangle {
+                    implicitWidth: 50
+                    implicitHeight: 50
+                    radius: 25
+                    color: root.fgColor
+                    opacity: root.canControl ? 1 : 0.35
+                    MediaBtn {
+                        player: root
+                        anchors.centerIn: parent
+                        text: root.isPlaying ? "" : ""
+                        font.pixelSize: 40
+                        color: "#0b0d12"
+                        onClicked: root.activePlayer.togglePlaying()
+                    }
+                }
+                MediaBtn {
+                    player: root
+                    text: ""
+                    font.pixelSize: 36
+                    onClicked: root.activePlayer.next()
+                }
+                MediaBtn {
+                    player: root
+                    text: ""
+                    font.pixelSize: 28
+                    active: root.hasPlayer && root.activePlayer.loopState !== MprisLoopState.None
+                    enabledBtn: root.canControl && root.activePlayer.loopSupported
+                    opacity: enabledBtn ? (active ? 1 : 0.55) : 0.25
+                    onClicked: {
+                        const p = root.activePlayer;
+                        p.loopState = p.loopState === MprisLoopState.None ? MprisLoopState.Playlist : p.loopState === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None;
+                    }
+                    Text {
+                        text: "1"
+                        visible: root.hasPlayer && root.activePlayer.loopState === MprisLoopState.Track
+                        color: root.accentColor
+                        font.family: root.fontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.rightMargin: -5
+                    }
+                }
             }
         }
     }
 
-    // -------------------------------------------------------------
-    // HOOFDINDELING
-    // -------------------------------------------------------------
-    RowLayout {
-        anchors.fill: parent
-        anchors.margins: 10
-        spacing: 16
+    Text {
+        anchors.right: parent.right
+        anchors.bottom: progressBar.top
+        anchors.margins: 8
+        text: root.formatTime(root.trackPosition) + " / " + root.formatTime(root.trackLength)
+        visible: root.trackLength > 0
+        color: root.dimColor
+        font.family: root.fontFamily
+        font.pixelSize: 11
+    }
 
-        // LINKER KOLOM: Media Bediening & Artwork
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 20
+    // thin progress line along the bottom edge
+    Rectangle {
+        id: progressBar
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        implicitHeight: seekArea.containsMouse ? 5 : 3
+        color: "#1fffffff"
 
-            // Album Art
-            Item {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: 335
-                Layout.preferredHeight: 335
-
-                Image {
-                    id: albumArt
-                    anchors.fill: parent
-                    source: root.artUrl
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    visible: false
-                }
-
-                Rectangle {
-                    id: maskRect
-                    anchors.fill: parent
-                    radius: 5
-                    visible: false
-                }
-
-                OpacityMask {
-                    anchors.fill: parent
-                    source: albumArt
-                    maskSource: maskRect
-                    visible: albumArt.status === Image.Ready && root.artUrl !== ""
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 5
-                    color: "#1a1b26"
-                    visible: albumArt.status !== Image.Ready || root.artUrl === ""
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: ""
-                        color: root.mutedColor
-                        font.pixelSize: 32
-                    }
-                }
-            }
-
-            // Track Info
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 6
-
-                Text {
-                    text: root.trackTitle
-                    color: root.fgColor
-                    font.family: root.fontFamily
-                    font.pixelSize: 22
-                    font.bold: true
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Text {
-                        text: root.trackArtist
-                        color: root.mutedColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 16
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-
-                    Text {
-                        Layout.alignment: Qt.AlignRight
-                        text: root.formatTime(root.trackPosition) + " / " + root.formatTime(root.trackLength)
-                        color: root.mutedColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 18
-                    }
-                }
-            }
-
-            // Item {
-            //     Layout.fillHeight: true
-            // }
-
-            // Progress Bar
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: 4
-                radius: 2
-                color: "#22ffffff"
-
-                Rectangle {
-                    height: parent.height
-                    width: root.trackLength > 0 ? parent.width * (root.trackPosition / root.trackLength) : 0
-                    radius: 2
-                    color: root.accentColor
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: root.canSeek
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => {
-                        if (root.activePlayer && root.canSeek) {
-                            root.activePlayer.position = (mouse.x / width) * root.trackLength;
-                            root.syncPosition();
-                        }
-                    }
-                }
-            }
-
-            // Knoppenbalk (Aangepast: negatieve topMargin trekt de knoppen omhoog richting de progress bar)
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: -32
-                spacing: 0
-
-                // Shuffle
-                Text {
-                    text: "\uf074"
-                    color: (root.activePlayer && root.activePlayer.shuffle) ? root.accentColor : "#888888"
-                    opacity: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported) ? 1 : 0.35
-                    font.family: root.fontFamily
-                    font.pixelSize: 42
-                    Layout.alignment: Qt.AlignVCenter
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: if (root.activePlayer && root.activePlayer.canControl && root.activePlayer.shuffleSupported)
-                            root.activePlayer.shuffle = !root.activePlayer.shuffle
-                    }
-                }
-
-                // Vorige nummer
-                Text {
-                    text: "\uf048"
-                    color: root.fgColor
-                    font.family: root.fontFamily
-                    font.pixelSize: 85
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 30
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: if (root.activePlayer)
-                            root.activePlayer.previous()
-                    }
-                }
-
-                // Play / Pause
-                Text {
-                    text: root.isPlaying ? "\uf04c" : "\uf04b"
-                    color: root.fgColor
-                    font.family: root.fontFamily
-                    font.pixelSize: 100
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 35
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: if (root.activePlayer)
-                            root.activePlayer.togglePlaying()
-                    }
-                }
-
-                // Volgende nummer
-                Text {
-                    text: "\uf051"
-                    color: root.fgColor
-                    font.family: root.fontFamily
-                    font.pixelSize: 85
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 35
-                    Layout.rightMargin: 30
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: if (root.activePlayer)
-                            root.activePlayer.next()
-                    }
-                }
-
-                // Herhalen
-                Text {
-                    text: "\uf01e"
-                    color: (root.activePlayer && root.activePlayer.loopState !== MprisLoopState.None) ? root.accentColor : "#888888"
-                    opacity: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.loopSupported) ? 1 : 0.35
-                    font.family: root.fontFamily
-                    font.pixelSize: 40
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 0
-
-                    Text {
-                        text: "1"
-                        visible: root.activePlayer && root.activePlayer.loopState === MprisLoopState.Track
-                        color: root.accentColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 15
-                        font.bold: true
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.rightMargin: -7
-                        anchors.bottomMargin: 8
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: (root.activePlayer && root.activePlayer.canControl && root.activePlayer.loopSupported) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: {
-                            if (!root.activePlayer || !root.activePlayer.canControl || !root.activePlayer.loopSupported)
-                                return;
-                            if (root.activePlayer.loopState === MprisLoopState.None)
-                                root.activePlayer.loopState = MprisLoopState.Playlist;
-                            else if (root.activePlayer.loopState === MprisLoopState.Playlist)
-                                root.activePlayer.loopState = MprisLoopState.Track;
-                            else
-                                root.activePlayer.loopState = MprisLoopState.None;
-                        }
-                    }
-                }
-            }
-
-            // Audio Output Device Badge (Aangepast: dichter op de knoppen + grotere dimensions & font)
-            //             Rectangle {
-            //                 Layout.alignment: Qt.AlignHCenter
-            //                 Layout.topMargin: -27
-            //                 implicitWidth: deviceRow.implicitWidth + 30
-            //                 implicitHeight: deviceRow.implicitHeight + 12
-            //                 radius: 5
-            //                 color: "#20ffffff"
-            //                 border.color: "#30ffffff"
-            //                 border.width: 1
-            //
-            //                 RowLayout {
-            //                     id: deviceRow
-            //                     anchors.centerIn: parent
-            //                     spacing: 8
-            //
-            //                     Text {
-            //                         text: "\uf028"
-            //                         color: root.accentColor
-            //                         font.family: root.fontFamily
-            //                         font.pixelSize: 20
-            //                     }
-            //
-            //                     Text {
-            //                         text: root.audioDeviceName
-            //                         color: root.fgColor
-            //                         font.family: root.fontFamily
-            //                         font.pixelSize: 15
-            //                         font.bold: true
-            //                         elide: Text.ElideRight
-            //                         Layout.maximumWidth: 300
-            //                     }
-            //                 }
-            //             }
-
-            // Audio Output Device Badge
-            Rectangle {
-                id: deviceBadge
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: -27
-                implicitWidth: deviceRow.implicitWidth + 30
-                implicitHeight: deviceRow.implicitHeight + 12
-                radius: 5
-                color: badgeMouse.containsMouse ? "#2affffff" : "#20ffffff"
-                border.color: "#30ffffff"
-                border.width: 1
-
-                RowLayout {
-                    id: deviceRow
-                    anchors.centerIn: parent
-                    spacing: 8
-
-                    Text {
-                        text: "\uf028"
-                        color: root.accentColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 20
-                    }
-
-                    Text {
-                        text: root.audioDeviceName
-                        color: root.fgColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 15
-                        font.bold: true
-                        elide: Text.ElideRight
-                        Layout.maximumWidth: 300
-                    }
-                }
-
-                MouseArea {
-                    id: badgeMouse
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Quickshell.execDetached(["pavucontrol"])
-                }
-            }
+        Rectangle {
+            height: parent.height
+            width: root.trackLength > 0 ? parent.width * Math.min(1, root.trackPosition / root.trackLength) : 0
+            color: root.fgColor
         }
 
-        // RECHTER KOLOM: CAVA Visualizer
-        Item {
-            Layout.preferredWidth: 85
-            Layout.fillHeight: true
-
-            Column {
-                anchors.centerIn: parent
-                spacing: 4
-
-                Repeater {
-                    model: 78
-
-                    delegate: Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        property real distFromCenter: Math.abs(index - 40.5)
-                        property int mappedIdx: Math.min(81, Math.floor(distFromCenter * 2))
-
-                        property real val: (root.cavaBars && root.cavaBars.length > mappedIdx) ? root.cavaBars[mappedIdx] : 0
-
-                        width: Math.max(8, val * 85)
-                        height: 3
-                        radius: 1.5
-                        color: root.cavaColor
-                        opacity: 0.25 + (val * 0.75)
-                    }
-                }
+        MouseArea {
+            id: seekArea
+            anchors.fill: parent
+            anchors.topMargin: -10
+            enabled: root.canSeek
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: mouse => {
+                root.activePlayer.position = (mouse.x / width) * root.trackLength;
+                root.syncPosition();
             }
         }
     }

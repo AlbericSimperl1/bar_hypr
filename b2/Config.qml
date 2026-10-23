@@ -19,6 +19,7 @@ Singleton {
     property int barGap: 8               // gap between bar and panel
     property int barSideMargin: 0        // inset from the two ends of the bar (notch mode)
     property int borderWidth: 0
+    property bool borderUnderline: false  // only the bar's inner edge + panel sides, as one underline
 
     readonly property bool vertical: barPosition === "left" || barPosition === "right"
 
@@ -103,8 +104,8 @@ Singleton {
 
     property var panelSizes: ({
             "media": {
-                "width": 520,
-                "height": 650
+                "width": 560,
+                "height": 216
             },
             "bluetooth": {
                 "width": 480,
@@ -126,6 +127,10 @@ Singleton {
                 "width": 480,
                 "height": 210
             },
+            "volume": {
+                "width": 420,
+                "height": 320
+            },
             "settings": {
                 "width": 580,
                 "height": 620
@@ -146,7 +151,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "cpuFormat", "ramFormat", "gpuFormat", "settingsIcon", "settingsIconSize"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "cpuFormat", "ramFormat", "gpuFormat", "settingsIcon", "settingsIconSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -311,6 +316,7 @@ Singleton {
     onBarGapChanged: saveTimer.restart()
     onBarSideMarginChanged: saveTimer.restart()
     onBorderWidthChanged: saveTimer.restart()
+    onBorderUnderlineChanged: saveTimer.restart()
     onWidgetSpacingChanged: saveTimer.restart()
     onFontScalePctChanged: saveTimer.restart()
     onIconScalePctChanged: saveTimer.restart()

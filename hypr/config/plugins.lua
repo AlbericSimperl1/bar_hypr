@@ -76,3 +76,19 @@ hl.config({
         },
     },
 })
+
+hl.config({
+    plugin =
+        { pointer_trail =
+            {
+                enabled = true,
+                trail_length = 40,
+                opacity = 0.5,
+                min_speed = 0.51,
+                cursor_image_path = "",
+                hide_when_fast = true,
+                hide_speed = 500,
+    
+            }
+     }
+})

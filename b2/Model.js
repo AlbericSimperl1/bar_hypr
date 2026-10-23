@@ -247,3 +247,99 @@ function shouldRepromptPassphrase(reason, needsCredentials, reasons) {
   if (!needsCredentials) return false;
   return reason === r.NoSecrets || reason === r.WifiAuthTimeout;
 }
+
+// key<TAB>value lines for the connected device of type $1 ("wifi" | "ethernet"); parse with parseKeyValue.
+// prints nothing when no such device is connected
+var connectionStatsScript =
+  "t=${1:-wifi}; d=$(nmcli -t -f DEVICE,TYPE,STATE dev | awk -F: -v t=\"$t\" '$2==t && $3==\"connected\"{print $1; exit}'); [ -n \"$d\" ] || exit 0;" +
+  " n=/sys/class/net/$d; printf 'type\\t%s\\niface\\t%s\\nrx_bytes\\t%s\\ntx_bytes\\t%s\\n'" +
+  " \"$t\" \"$d\" \"$(cat $n/statistics/rx_bytes)\" \"$(cat $n/statistics/tx_bytes)\";" +
+  " if [ \"$t\" = wifi ]; then iw dev \"$d\" link | awk '/signal:/{print \"signal\\t\"$2} /freq:/{print \"freq\\t\"$2}" +
+  " /RX:/{print \"session_rx\\t\"$2} /TX:/{print \"session_tx\\t\"$2}" +
+  " /bitrate:/{print $1\"_rate\\t\"$3; if(match($0,/[0-9]+MHz/))w=substr($0,RSTART,RLENGTH-3);" +
+  " if($0~/EHT-/)g=7; else if($0~/HE-/&&g<6)g=6; else if($0~/VHT-/&&g<5)g=5; else if($0~/ MCS /&&g<4)g=4}" +
+  " END{if(w)print \"width\\t\"w; if(g)print \"gen\\t\"g}';" +
+  " else printf 'speed\\t%s\\nduplex\\t%s\\n' \"$(cat $n/speed 2>/dev/null)\" \"$(cat $n/duplex 2>/dev/null)\"; fi;" +
+  " nmcli -t -f IP4.ADDRESS,IP4.GATEWAY dev show \"$d\" | awk -F: '/ADDRESS/&&!a{a=1; print \"ip\\t\"$2} /GATEWAY/{print \"gateway\\t\"$2}'";
+
+function wifiChannel(mhz) {
+  var f = parseFloat(mhz);
+  if (!f) return 0;
+  if (f === 2484) return 14;
+  if (f === 5935) return 2;
+  if (f >= 5925) return Math.round((f - 5950) / 5);
+  if (f >= 4900) return Math.round((f - 5000) / 5);
+  return Math.round((f - 2407) / 5);
+}
+
+function signalQuality(dbm) {
+  if (dbm >= -50) return "Excellent";
+  if (dbm >= -60) return "Good";
+  if (dbm >= -70) return "Fair";
+  return "Weak";
+}
+
+// display strings for the active connection's stats grid, from parseKeyValue(connectionStatsScript output)
+function connectionStats(kv) {
+  var s = kv || {};
+  var dbm = parseInt(s.signal, 10);
+  var rx = parseFloat(s.rx_rate);
+  var tx = parseFloat(s.tx_rate);
+  var speed = parseInt(s.speed, 10); // -1 or missing when the cable reports no speed
+  var channel = wifiChannel(s.freq);
+  var band = [
+    formatHeaderFreq(s.freq).replace("ghz", " GHz"),
+    channel ? "ch " + channel : "",
+    s.width ? s.width + " MHz" : "",
+    s.gen ? "Wi-Fi " + s.gen : "",
+  ];
+  var link = "";
+  if (rx) link = "↓ " + Math.round(rx) + "  ↑ " + Math.round(tx || 0) + " Mb/s";
+  else if (speed > 0) link = speed >= 1000 ? speed / 1000 + " Gb/s" : speed + " Mb/s";
+  return {
+    signal: isNaN(dbm) ? "" : dbm + " dBm",
+    quality: isNaN(dbm) ? "" : signalQuality(dbm),
+    link: link,
+    linkDetail: s.type === "wifi"
+      ? band.filter(function (p) { return p !== ""; }).join(" · ")
+      : s.duplex && s.duplex !== "unknown" ? s.duplex + " duplex" : "",
+    session: s.session_rx
+      ? "↓ " + formatBytes(s.session_rx) + "  ↑ " + formatBytes(s.session_tx) + " this session"
+      : s.rx_bytes ? "↓ " + formatBytes(s.rx_bytes) + "  ↑ " + formatBytes(s.tx_bytes) + " since up" : "",
+    ip: String(s.ip || "").split("/")[0],
+    gateway: s.gateway ? "gateway " + s.gateway : "",
+  };
+}
+
+// network rates are quoted in bits (like speedtests), data volumes in bytes
+function formatBits(bytesPerSec) {
+  var b = Number(bytesPerSec) * 8;
+  if (!isFinite(b) || b < 0) b = 0;
+  if (b < 1000) return Math.round(b) + " b/s";
+  if (b < 1e6) return (b / 1e3).toFixed(1) + " Kb/s";
+  if (b < 1e9) return (b / 1e6).toFixed(1) + " Mb/s";
+  return (b / 1e9).toFixed(2) + " Gb/s";
+}
+
+// on-demand speed test against Cloudflare's endpoints; streams key<TAB>value lines as each stage finishes:
+// ping (ms), down / up (bytes/s, 4 parallel streams since one stream undershoots fast lines), or error.
+// moves ~120 MB, so it only runs when asked
+var speedTestScript =
+  "U=https://speed.cloudflare.com;" +
+  " p=$(for i in 1 2 3 4 5; do curl -s -o /dev/null -m 5 -w '%{time_connect} %{time_namelookup}\\n' \"$U/__down?bytes=0\"; done" +
+  " | awk '{v=($1-$2)*1000; if(v>0&&(!m||v<m))m=v} END{if(m)printf \"%.0f\", m}');" +
+  " [ -n \"$p\" ] || { printf 'error\\tunreachable\\n'; exit 1; }; printf 'ping\\t%s\\n' \"$p\";" +
+  " d=$(for i in 1 2 3 4; do curl -s -o /dev/null -m 20 -w '%{speed_download}\\n' \"$U/__down?bytes=25000000\" & done; wait);" +
+  " printf 'down\\t%s\\n' \"$(echo \"$d\" | awk '{s+=$1} END{printf \"%.0f\", s}')\";" +
+  " u=$(for i in 1 2 3 4; do head -c 5000000 /dev/zero | curl -s -o /dev/null -m 20 -w '%{speed_upload}\\n' --data-binary @- \"$U/__up\" & done; wait);" +
+  " printf 'up\\t%s\\n' \"$(echo \"$u\" | awk '{s+=$1} END{printf \"%.0f\", s}')\"";
+
+// one line summary of a (possibly partial) speed test result
+function speedTestSummary(r) {
+  var t = r || {};
+  var parts = [];
+  if (t.down) parts.push("↓ " + formatBits(t.down));
+  if (t.up) parts.push("↑ " + formatBits(t.up));
+  if (t.ping) parts.push(t.ping + " ms");
+  return parts.join("  ");
+}

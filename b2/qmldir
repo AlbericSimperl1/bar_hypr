@@ -22,6 +22,8 @@ PanelIcon PanelIcon.qml
 PowerPanel PowerPanel.qml
 SettingsPanel SettingsPanel.qml
 VolumeWidget VolumeWidget.qml
+VolumePanel VolumePanel.qml
+MediaBtn MediaBtn.qml
 WifiPanel WifiPanel.qml
 Ws Ws.qml
 Zone Zone.qml
@@ -36,3 +38,4 @@ Island Island.qml
 StatCell StatCell.qml
 GpuWidget GpuWidget.qml
 Spacer Spacer.qml
+Border Border.qml

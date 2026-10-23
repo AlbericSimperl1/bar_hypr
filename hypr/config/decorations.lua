@@ -21,15 +21,16 @@ hl.config({
     decoration = {
         dim_special = 0.2,
         dim_inactive = true,
-        dim_strength = 0.4,
+        dim_strength = 0.25,
         rounding = 4,
         active_opacity = 0.92,
         inactive_opacity = 0.92,
         fullscreen_opacity = 1,
+        -- geldt voor alles wat blurt, ook rust-launcher (die vraagt alleen het gebied aan)
         blur = {
             enabled = true,
-            size = 3,
-            passes = 4,
+            size = 2,   -- straal per pass: hoger = waziger
+            passes = 4, -- aantal passes: hoger = gladder/sterker, maar zwaarder voor de GPU
             special = true,
         },
     },

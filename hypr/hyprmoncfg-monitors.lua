@@ -3,7 +3,7 @@
 hl.monitor({
   output = "desc:AOC U2879G6 0x00000241",
   mode = "3840x2160@60.00",
-  position = "2880x0",
+  position = "2304x0",
   scale = 1,
   vrr = 0,
   sdr_min_luminance = 0.2,
@@ -11,10 +11,10 @@ hl.monitor({
 })
 
 hl.monitor({
-  output = "vm",
-  mode = "2880x2160@60.00",
-  position = "0x0",
-  scale = 1,
+  output = "virtual",
+  mode = "3180x2384@60.00",
+  position = "714x0",
+  scale = 2,
   vrr = 0,
   sdr_min_luminance = 0.2,
   sdr_max_luminance = 80,
