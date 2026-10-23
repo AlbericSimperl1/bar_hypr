@@ -580,7 +580,7 @@ Item {
                                 if (speedTestProc.running)
                                     return !t.ping ? "Measuring ping…" : !t.down ? "Measuring download…" : "Measuring upload…";
                                 if (t.error)
-                                    return "Couldn't reach Cloudflare";
+                                    return "Couldn't reach Cloudflare...";
                                 // return t.at ? "Cloudflare · " + Qt.formatTime(t.at, "HH:mm") : "Uses ~120 MB";
                             }
                         }
