@@ -2,6 +2,7 @@ singleton Config Config.qml
 singleton BarState BarState.qml
 singleton WidgetRegistry WidgetRegistry.qml
 singleton Notifications Notifications.qml
+singleton Osd Osd.qml
 singleton BtIcons BtIcons.qml
 singleton SysStats SysStats.qml
 

@@ -320,12 +320,44 @@ Singleton {
             nkey: key,
             appName: n.appName || "",
             icon: _resolveIcon(n),
+            glyph: "",
             title: title,
             body: body,
+            value: -1,
             timeout: timeout,
             mergeKey: mergeKey,
             token: 0
         });
+    }
+
+    // on-screen toasts (volume, brightness, muziek, ...): één toast per soort die bijwerkt i.p.v. stapelt.
+    // value 0..1 toont een balk, -1 geen balk.
+    function osd(kind, glyph, title, body, value, icon) {
+        const mergeKey = "osd|" + kind;
+        const fields = {
+            glyph: glyph,
+            title: title,
+            body: body,
+            value: value,
+            icon: icon || ""
+        };
+        for (let i = 0; i < toastModel.count; i++) {
+            const ex = toastModel.get(i);
+            if (ex.mergeKey === mergeKey) {
+                toastModel.set(i, Object.assign(fields, {
+                    token: ex.token + 1
+                }));
+                return;
+            }
+        }
+        toastModel.append(Object.assign(fields, {
+            tid: String(++_toastSeq),
+            nkey: "",
+            appName: "",
+            timeout: 1600,
+            mergeKey: mergeKey,
+            token: 0
+        }));
     }
 
     function dismissToast(tid) {

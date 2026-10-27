@@ -7,6 +7,9 @@ import Quickshell.Hyprland
 ShellRoot {
     id: root
 
+    // singletons laden pas bij eerste gebruik: Osd moet altijd draaien (watchers + IPC)
+    readonly property var osd: Osd
+
     // a click anywhere outside the bars/panels (any screen) closes the open panel
     HyprlandFocusGrab {
         active: BarState.panelOpen

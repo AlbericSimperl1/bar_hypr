@@ -101,7 +101,7 @@ hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(noctCall .. "panel-toggle control-cen
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher"))
 
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd(noctCall .. "panel-toggle launcher /emo"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(noctCall .. "session lock"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("~/.config/hypr/scripts/lock.sh"))
 hl.bind(mainMod .. " + ALT + C", hl.dsp.exec_cmd(noctCall .. "panel-toggle session"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(noctCall .. "power-cycle"))
 hl.bind("SUPER + G", hl.dsp.group.toggle(), { description = "Toggle window group" })
@@ -117,7 +117,7 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
     { locked = true, repeating = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
-hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd(noctCall .. "mic-mute"), { locked = true })
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 
 -- Media
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
@@ -125,9 +125,10 @@ hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tr
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 
--- Brightness
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(noctCall .. "brightness-up"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(noctCall .. "brightness-down"), { locked = true, repeating = true })
+-- Brightness: via de quickshell-bar (ddcutil naar het externe scherm + toast)
+local qsOsd = "qs -p ~/bar_hypr/b2 ipc call osd "
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(qsOsd .. "brightness 5"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(qsOsd .. "brightness -5"), { locked = true, repeating = true })
 
 hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-monitor.sh DP-3"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-monitor.sh HDMI-A-1"))
@@ -142,7 +143,7 @@ hl.bind("Print", hl.dsp.exec_cmd("/home/alberic/.local/bin/rishot"))
 
 
 -- Theming and Wallpaper
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(noctCall .. "panel-toggle wallpaper"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher --wallpaper"))
 
 -- Clipboard
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(noctCall .. "panel-toggle clipboard"))

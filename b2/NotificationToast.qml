@@ -54,15 +54,18 @@ PanelWindow {
                     required property string tid
                     required property string appName
                     required property string icon
+                    required property string glyph
                     required property string title
                     required property string body
+                    required property real value
                     required property int timeout
                     required property int token
 
                     width: toastCol.width
                     height: toastRow.implicitHeight + 24
                     radius: 6
-                    color: "#f2121210"
+                    // licht doorschijnend; Hyprland blurt erachter (layer_rule op namespace "quickshell")
+                    color: "#b3121210"
                     border.width: 1
                     border.color: "#2effffff"
 
@@ -111,7 +114,7 @@ PanelWindow {
                             Text {
                                 anchors.centerIn: parent
                                 visible: toastImg.status !== Image.Ready
-                                text: "\udb80\udc9a"
+                                text: toast.glyph !== "" ? toast.glyph : "\udb80\udc9a"
                                 color: "#fff7e5"
                                 font.family: "JetBrainsMono Nerd Font Mono"
                                 font.pixelSize: 40
@@ -155,6 +158,27 @@ PanelWindow {
                                 wrapMode: Text.Wrap
                                 maximumLineCount: 3
                                 elide: Text.ElideRight
+                            }
+
+                            Rectangle {
+                                visible: toast.value >= 0
+                                width: parent.width
+                                height: 4
+                                radius: 2
+                                color: "#26fff7e5"
+
+                                Rectangle {
+                                    width: parent.width * Math.max(0, Math.min(1, toast.value))
+                                    height: parent.height
+                                    radius: 2
+                                    color: "#fff7e5"
+
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: 90
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
