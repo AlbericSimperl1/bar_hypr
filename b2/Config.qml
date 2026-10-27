@@ -23,9 +23,6 @@ Singleton {
 
     readonly property bool vertical: barPosition === "left" || barPosition === "right"
 
-    // chevron that points at the screen edge the bar sits on
-    readonly property string chevron: barPosition === "top" ? "\udb80\udd43" : barPosition === "bottom" ? "\udb80\udd40" : barPosition === "left" ? "\udb80\udd41" : "\udb80\udd42"
-
     // zone naming follows the bar orientation (internal keys stay left/center/right)
     function zoneLabel(z) {
         if (vertical)
@@ -68,15 +65,16 @@ Singleton {
     readonly property int panelWidthMax: 800
 
     // ── Widget zones ──
-    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "battery", "power", "settings"]
+    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "disk", "battery", "power", "settings"]
     property var leftWidgets: ["clock"]
     property var centerWidgets: ["ws"]
-    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "gpu", "battery"]
+    property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "gpu", "disk", "battery"]
     property var widgetDisabled: ({
             "volume": true,
             "cpu": true,
             "ram": true,
             "gpu": true,
+            "disk": true,
             "battery": true
         })
 
@@ -89,11 +87,13 @@ Singleton {
     property bool workspaceShowNumbers: false
     property string volumeIconMode: "icon"   // icon | percent | both
     property int mediaTitleMax: 25
+    property bool mediaCava: false   // bar widget shows a cava spectrum instead of album art
 
     // stat widgets: percent | used | usedTotal | both
     property string cpuFormat: "percent"
     property string ramFormat: "percent"
     property string gpuFormat: "percent"
+    property string diskFormat: "usedTotal"
 
     // ── Settings icon ──
     property string settingsIcon: "\uf1de"
@@ -131,6 +131,10 @@ Singleton {
                 "width": 420,
                 "height": 320
             },
+            "sysmon": {
+                "width": 420,
+                "height": 360
+            },
             "settings": {
                 "width": 580,
                 "height": 620
@@ -151,7 +155,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "cpuFormat", "ramFormat", "gpuFormat", "settingsIcon", "settingsIconSize"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "mediaCava", "cpuFormat", "ramFormat", "gpuFormat", "diskFormat", "settingsIcon", "settingsIconSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -199,7 +203,7 @@ Singleton {
         _ensureAllPlaced();
     }
 
-    readonly property var _defaultOff: ["volume", "cpu", "ram", "gpu", "battery"]
+    readonly property var _defaultOff: ["volume", "cpu", "ram", "gpu", "disk", "battery"]
 
     function _ensureAllPlaced() {
         // drop widgets that no longer exist (e.g. old "cpuram")
@@ -340,9 +344,11 @@ Singleton {
     onWorkspaceShowNumbersChanged: saveTimer.restart()
     onVolumeIconModeChanged: saveTimer.restart()
     onMediaTitleMaxChanged: saveTimer.restart()
+    onMediaCavaChanged: saveTimer.restart()
     onCpuFormatChanged: saveTimer.restart()
     onRamFormatChanged: saveTimer.restart()
     onGpuFormatChanged: saveTimer.restart()
+    onDiskFormatChanged: saveTimer.restart()
     onSettingsIconChanged: saveTimer.restart()
     onSettingsIconSizeChanged: saveTimer.restart()
 

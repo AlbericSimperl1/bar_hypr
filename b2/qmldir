@@ -3,6 +3,7 @@ singleton BarState BarState.qml
 singleton WidgetRegistry WidgetRegistry.qml
 singleton Notifications Notifications.qml
 singleton BtIcons BtIcons.qml
+singleton SysStats SysStats.qml
 
 BarContent BarContent.qml
 BatteryPill BatteryPill.qml
@@ -34,8 +35,11 @@ SToggle SToggle.qml
 SField SField.qml
 SIconBtn SIconBtn.qml
 SWidgetRow SWidgetRow.qml
+SSection SSection.qml
 Island Island.qml
 StatCell StatCell.qml
 GpuWidget GpuWidget.qml
+DiskWidget DiskWidget.qml
+SysmonPanel SysmonPanel.qml
 Spacer Spacer.qml
 Border Border.qml

@@ -1,6 +1,7 @@
 // MediaWidget.qml
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import Qt5Compat.GraphicalEffects
 
@@ -35,6 +36,19 @@ Item {
     readonly property bool isOpen: BarState.activePanel === "media"
     readonly property bool wantVisible: hasPlayer || isOpen
 
+    // first half of cava's 12 bars (the low end), 0..100
+    property var bars: [0, 0, 0, 0, 0, 0]
+
+    Process {
+        running: Config.mediaCava && root.hasPlayer
+        command: ["cava", "-p", Qt.resolvedUrl("cava.conf").toString().replace("file://", "")]
+        stdout: SplitParser {
+            onRead: line => root.bars = line.split(";").slice(0, 6).map(Number)
+        }
+        onRunningChanged: if (!running)
+            root.bars = [0, 0, 0, 0, 0, 0]
+    }
+
     visible: wantVisible
     implicitWidth: grid.implicitWidth
     implicitHeight: grid.implicitHeight
@@ -46,10 +60,27 @@ Item {
         rowSpacing: 8
 
         Item {
-            visible: !root.isOpen
             Layout.preferredWidth: 20
             Layout.preferredHeight: 20
             Layout.alignment: Qt.AlignVCenter
+
+            Row {
+                visible: Config.mediaCava
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 1.6
+                Repeater {
+                    model: 6
+                    delegate: Rectangle {
+                        required property int index
+                        anchors.bottom: parent.bottom
+                        width: 2
+                        height: Math.max(2, (root.bars[index] || 0) / 100 * 20)
+                        radius: 1
+                        color: Config.fgColor
+                    }
+                }
+            }
 
             Image {
                 id: art
@@ -69,11 +100,11 @@ Item {
                 anchors.fill: parent
                 source: art
                 maskSource: mask
-                visible: art.status === Image.Ready && root.artUrl !== ""
+                visible: !Config.mediaCava && art.status === Image.Ready && root.artUrl !== ""
             }
             Text {
                 anchors.centerIn: parent
-                visible: art.status !== Image.Ready || root.artUrl === ""
+                visible: !Config.mediaCava && (art.status !== Image.Ready || root.artUrl === "")
                 text: "󰎈"
                 color: Config.fgColor
                 font.family: Config.iconFont
@@ -82,22 +113,13 @@ Item {
         }
 
         Text {
-            visible: !root.isOpen && !root.vertical && root.combo !== ""
+            visible: !root.vertical && root.combo !== ""
             Layout.alignment: Qt.AlignVCenter
             text: root.combo
             color: Config.fgColor
             font.family: Config.fontFamily
             font.pixelSize: Math.round(14 * Config.fontScale)
             elide: Text.ElideRight
-        }
-
-        Text {
-            visible: root.isOpen
-            Layout.alignment: Qt.AlignVCenter
-            text: Config.chevron
-            color: Config.fgColor
-            font.family: Config.iconFont
-            font.pixelSize: 22
         }
     }
 

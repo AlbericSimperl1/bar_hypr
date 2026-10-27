@@ -18,6 +18,7 @@ Singleton {
             "cpu": cpuComp,
             "ram": ramComp,
             "gpu": gpuComp,
+            "disk": diskComp,
             "battery": batteryComp,
             "power": powerComp,
             "settings": settingsComp
@@ -62,6 +63,10 @@ Singleton {
         GpuWidget {}
     }
     Component {
+        id: diskComp
+        DiskWidget {}
+    }
+    Component {
         id: batteryComp
         BatteryPill {}
     }
@@ -77,7 +82,6 @@ Singleton {
             iconSize: Math.round(29 * Config.iconScale)
             fgColor: Config.fgColor
             accentColor: Config.accentColor
-            isOpen: BarState.activePanel === "brightness"
             onClicked: {
                 const p = mapToItem(null, width / 2, height / 2);
                 BarState.toggle("brightness", p.x, p.y);

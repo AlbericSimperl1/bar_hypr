@@ -1,5 +1,6 @@
 // StatCell.qml - label + value.
 // Horizontal: "cpu 12%" / "ram 5.2/31.2G" / "ram 18% 5.2/31.2G"   Vertical: "C" over "12" (two lines for used/total)
+// Values come from a SysStats stat; clicking opens the shared sysmon panel.
 import QtQuick
 import QtQuick.Layouts
 
@@ -7,15 +8,16 @@ Item {
     id: root
     property string shortLabel: "C"
     property string longLabel: "cpu"
-    property int value: 0
-    property bool known: true
+    required property var stat
+    readonly property int value: stat.value
+    readonly property bool known: stat.known
 
     // percent | used | usedTotal | both
     property string format: "percent"
     // "mem" -> used/total in MiB, "cores" -> used/total in cores
     property string kind: "mem"
-    property real used: -1
-    property real total: -1
+    readonly property real used: stat.used
+    readonly property real total: stat.total
 
     readonly property bool hasDetail: used >= 0 && total > 0
 
@@ -25,13 +27,7 @@ Item {
 
     readonly property string usedText: kind === "cores" ? used.toFixed(1) : _mem(used)
     readonly property string totalText: kind === "cores" ? String(Math.round(total)) : _mem(total)
-    readonly property string utText: {
-        if (kind === "cores")
-            return used.toFixed(1) + "/" + Math.round(total);
-        if (total >= 1024)
-            return (used / 1024).toFixed(1) + "/" + (total / 1024).toFixed(1) + "G";
-        return Math.round(used) + "/" + Math.round(total) + "M";
-    }
+    readonly property string utText: SysStats.usedTotal(kind, used, total)
 
     readonly property string display: {
         if (!hasDetail || format === "percent")
@@ -81,6 +77,16 @@ Item {
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignCenter
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        anchors.margins: -3
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            const p = root.mapToItem(null, root.width / 2, root.height / 2);
+            BarState.toggle("sysmon", p.x, p.y);
         }
     }
 }

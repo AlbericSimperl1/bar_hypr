@@ -7,7 +7,6 @@ Item {
     property string glyph: ""
     property int size: 25
     property real dy: 0            // per-icon vertical nudge
-    readonly property bool isOpen: BarState.activePanel === panel
     default property alias extra: overlay.data
     signal rightClicked
 
@@ -17,13 +16,13 @@ Item {
     Text {
         id: label
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: ic.isOpen ? 0 : ic.dy
+        anchors.verticalCenterOffset: ic.dy
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
-        text: ic.isOpen ? Config.chevron : ic.glyph
+        text: ic.glyph
         color: Config.fgColor
         font.family: Config.iconFont
-        font.pixelSize: Math.round((ic.isOpen ? 22 : ic.size) * Config.iconScale)
+        font.pixelSize: Math.round(ic.size * Config.iconScale)
     }
 
     Item {

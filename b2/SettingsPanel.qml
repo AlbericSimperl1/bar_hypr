@@ -30,7 +30,7 @@ Item {
         },
         {
             key: "format",
-            label: "Format"
+            label: "Per widget"
         }
     ]
 
@@ -47,6 +47,10 @@ Item {
         {
             key: "gpu",
             label: "GPU display"
+        },
+        {
+            key: "disk",
+            label: "Disk display"
         }
     ]
     readonly property var statFormats: [
@@ -69,19 +73,10 @@ Item {
     ]
 
     function statFormat(w) {
-        if (w === "cpu")
-            return Config.cpuFormat;
-        if (w === "ram")
-            return Config.ramFormat;
-        return Config.gpuFormat;
+        return Config[w + "Format"];
     }
     function setStatFormat(w, f) {
-        if (w === "cpu")
-            Config.cpuFormat = f;
-        else if (w === "ram")
-            Config.ramFormat = f;
-        else
-            Config.gpuFormat = f;
+        Config[w + "Format"] = f;
         Config.save();
     }
 
@@ -188,276 +183,254 @@ Item {
                 // ── BAR ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
                     visible: root.tab === "bar"
 
-                    SLbl {
-                        text: "POSITION"
-                    }
-                    RowLayout {
-                        spacing: 6
-                        Repeater {
-                            model: ["top", "bottom", "left", "right"]
-                            delegate: SChip {
-                                required property string modelData
-                                label: modelData
-                                sel: Config.barPosition === modelData
-                                onActivated: Config.barPosition = modelData
+                    SSection {
+                        title: "Position"
+                        RowLayout {
+                            spacing: 6
+                            Repeater {
+                                model: ["top", "bottom", "left", "right"]
+                                delegate: SChip {
+                                    required property string modelData
+                                    label: modelData
+                                    sel: Config.barPosition === modelData
+                                    onActivated: Config.barPosition = modelData
+                                }
                             }
                         }
                     }
 
-                    SSlider {
-                        label: "Bar thickness"
-                        from: 12
-                        to: 120
-                        suffix: "px"
-                        value: Config.barHeight
-                        onMoved: v => Config.barHeight = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Edge margin"
-                        from: 0
-                        to: 200
-                        suffix: "px"
-                        value: Config.barMargin
-                        onMoved: v => Config.barMargin = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Side margin"
-                        from: 0
-                        to: 2400
-                        suffix: "px"
-                        value: Config.barSideMargin
-                        onMoved: v => Config.barSideMargin = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Border width"
-                        from: 0
-                        to: 12
-                        suffix: "px"
-                        value: Config.borderWidth
-                        onMoved: v => {
-                            if (v >= 0.5 && Config.borderColor.a === 0)
-                                Config.borderColor = "#66ffffff";
-                            Config.borderWidth = Math.round(v);
+                    SSection {
+                        title: "Size"
+                        SSlider {
+                            label: "Bar thickness"
+                            from: 12
+                            to: 120
+                            suffix: "px"
+                            value: Config.barHeight
+                            onMoved: v => Config.barHeight = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Edge margin"
+                            from: 0
+                            to: 200
+                            suffix: "px"
+                            value: Config.barMargin
+                            onMoved: v => Config.barMargin = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Side margin"
+                            from: 0
+                            to: 2400
+                            suffix: "px"
+                            value: Config.barSideMargin
+                            onMoved: v => Config.barSideMargin = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Bar inset"
+                            from: 0
+                            to: 300
+                            suffix: "px"
+                            value: Config.barInset
+                            onMoved: v => Config.barInset = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Bar rounding"
+                            from: 0
+                            to: 60
+                            suffix: "px"
+                            value: Config.barRadius
+                            onMoved: v => Config.barRadius = Math.round(v)
                         }
                     }
-                    SToggle {
-                        label: "Underline border"
-                        value: Config.borderUnderline
-                        onToggled: v => Config.borderUnderline = v
+
+                    SSection {
+                        title: "Border"
+                        SSlider {
+                            label: "Border width"
+                            from: 0
+                            to: 12
+                            suffix: "px"
+                            value: Config.borderWidth
+                            onMoved: v => {
+                                if (v >= 0.5 && Config.borderColor.a === 0)
+                                    Config.borderColor = "#66ffffff";
+                                Config.borderWidth = Math.round(v);
+                            }
+                        }
+                        SToggle {
+                            label: "Underline border"
+                            value: Config.borderUnderline
+                            onToggled: v => Config.borderUnderline = v
+                        }
                     }
-                    SSlider {
-                        label: "Bar inset"
-                        from: 0
-                        to: 300
-                        suffix: "px"
-                        value: Config.barInset
-                        onMoved: v => Config.barInset = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Bar rounding"
-                        from: 0
-                        to: 60
-                        suffix: "px"
-                        value: Config.barRadius
-                        onMoved: v => Config.barRadius = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Panel gap"
-                        from: 0
-                        to: 80
-                        suffix: "px"
-                        value: Config.barGap
-                        onMoved: v => Config.barGap = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Panel rounding"
-                        from: 0
-                        to: 60
-                        suffix: "px"
-                        value: Config.panelRadius
-                        onMoved: v => Config.panelRadius = Math.round(v)
+
+                    SSection {
+                        title: "Panels"
+                        SSlider {
+                            label: "Panel gap"
+                            from: 0
+                            to: 80
+                            suffix: "px"
+                            value: Config.barGap
+                            onMoved: v => Config.barGap = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Panel rounding"
+                            from: 0
+                            to: 60
+                            suffix: "px"
+                            value: Config.panelRadius
+                            onMoved: v => Config.panelRadius = Math.round(v)
+                        }
                     }
                 }
 
                 // ── STYLE ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
                     visible: root.tab === "style"
 
-                    SSlider {
-                        label: "Widget spacing"
-                        from: 0
-                        to: 100
-                        suffix: "px"
-                        value: Config.widgetSpacing
-                        onMoved: v => Config.widgetSpacing = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Font size"
-                        from: 40
-                        to: 300
-                        suffix: "%"
-                        value: Config.fontScalePct
-                        onMoved: v => Config.fontScalePct = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Icon size"
-                        from: 40
-                        to: 300
-                        suffix: "%"
-                        value: Config.iconScalePct
-                        onMoved: v => Config.iconScalePct = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Settings icon size"
-                        from: 10
-                        to: 60
-                        suffix: "px"
-                        value: Config.settingsIconSize
-                        onMoved: v => Config.settingsIconSize = Math.round(v)
-                    }
-                    RowLayout {
-                        spacing: 6
-                        SLbl {
-                            text: "Settings icon"
+                    SSection {
+                        title: "Sizes"
+                        SSlider {
+                            label: "Widget spacing"
+                            from: 0
+                            to: 100
+                            suffix: "px"
+                            value: Config.widgetSpacing
+                            onMoved: v => Config.widgetSpacing = Math.round(v)
                         }
-                        Repeater {
-                            model: ["\uf1de", "\uf013", "\uf085", "\uf0ad", "\uf0c9"]
-                            delegate: SIconBtn {
-                                required property string modelData
-                                glyph: modelData
-                                active: Config.settingsIcon === modelData
-                                onActivated: Config.settingsIcon = modelData
-                            }
+                        SSlider {
+                            label: "Font size"
+                            from: 40
+                            to: 300
+                            suffix: "%"
+                            value: Config.fontScalePct
+                            onMoved: v => Config.fontScalePct = Math.round(v)
                         }
-                    }
-                    SField {
-                        label: "Icon glyph / hex"
-                        value: Config.settingsIcon
-                        onCommitted: v => Config.settingsIcon = root.parseGlyph(v)
-                    }
-                    SField {
-                        label: "Font family"
-                        value: Config.fontFamily
-                        onCommitted: v => Config.fontFamily = v
+                        SSlider {
+                            label: "Icon size"
+                            from: 40
+                            to: 300
+                            suffix: "%"
+                            value: Config.iconScalePct
+                            onMoved: v => Config.iconScalePct = Math.round(v)
+                        }
                     }
 
-                    SLbl {
-                        text: "ISLANDS"
-                        Layout.topMargin: 8
+                    SSection {
+                        title: "Font"
+                        SField {
+                            label: "Font family"
+                            value: Config.fontFamily
+                            onCommitted: v => Config.fontFamily = v
+                        }
                     }
-                    SToggle {
-                        label: "Enable islands"
-                        value: Config.islandsEnabled
-                        onToggled: v => Config.islandsEnabled = v
-                    }
-                    SSlider {
-                        label: "Island padding"
-                        from: 0
-                        to: 100
-                        suffix: "px"
-                        value: Config.islandPadding
-                        onMoved: v => Config.islandPadding = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Island inset"
-                        from: 0
-                        to: 40
-                        suffix: "px"
-                        value: Config.islandInset
-                        onMoved: v => Config.islandInset = Math.round(v)
-                    }
-                    SSlider {
-                        label: "Island rounding"
-                        from: 0
-                        to: 60
-                        suffix: "px"
-                        value: Config.islandRadius
-                        onMoved: v => Config.islandRadius = Math.round(v)
-                    }
-                    SField {
-                        label: "Island color"
-                        isColor: true
-                        value: String(Config.islandColor)
-                        onCommitted: v => Config.islandColor = v
+
+                    SSection {
+                        title: "Islands"
+                        SToggle {
+                            label: "Enable islands"
+                            value: Config.islandsEnabled
+                            onToggled: v => Config.islandsEnabled = v
+                        }
+                        SSlider {
+                            label: "Island padding"
+                            from: 0
+                            to: 100
+                            suffix: "px"
+                            value: Config.islandPadding
+                            onMoved: v => Config.islandPadding = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Island inset"
+                            from: 0
+                            to: 40
+                            suffix: "px"
+                            value: Config.islandInset
+                            onMoved: v => Config.islandInset = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Island rounding"
+                            from: 0
+                            to: 60
+                            suffix: "px"
+                            value: Config.islandRadius
+                            onMoved: v => Config.islandRadius = Math.round(v)
+                        }
+                        SField {
+                            label: "Island color"
+                            isColor: true
+                            value: String(Config.islandColor)
+                            onCommitted: v => Config.islandColor = v
+                        }
                     }
                 }
 
                 // ── COLORS ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
                     visible: root.tab === "colors"
 
-                    SField {
-                        label: "Bar background"
-                        isColor: true
-                        value: String(Config.barBg)
-                        onCommitted: v => Config.barBg = v
+                    SSection {
+                        title: "Bar"
+                        SField {
+                            label: "Bar background"
+                            isColor: true
+                            value: String(Config.barBg)
+                            onCommitted: v => Config.barBg = v
+                        }
+                        SField {
+                            label: "Border"
+                            isColor: true
+                            value: String(Config.borderColor)
+                            onCommitted: v => Config.borderColor = v
+                        }
                     }
-                    SField {
-                        label: "Foreground"
-                        isColor: true
-                        value: String(Config.fgColor)
-                        onCommitted: v => Config.fgColor = v
+                    SSection {
+                        title: "Text"
+                        SField {
+                            label: "Foreground"
+                            isColor: true
+                            value: String(Config.fgColor)
+                            onCommitted: v => Config.fgColor = v
+                        }
+                        SField {
+                            label: "Accent"
+                            isColor: true
+                            value: String(Config.accentColor)
+                            onCommitted: v => Config.accentColor = v
+                        }
                     }
-                    SField {
-                        label: "Accent"
-                        isColor: true
-                        value: String(Config.accentColor)
-                        onCommitted: v => Config.accentColor = v
-                    }
-                    SField {
-                        label: "Border"
-                        isColor: true
-                        value: String(Config.borderColor)
-                        onCommitted: v => Config.borderColor = v
-                    }
-                    SField {
-                        label: "Panel background"
-                        isColor: true
-                        value: String(Config.panelBg)
-                        onCommitted: v => Config.panelBg = v
+                    SSection {
+                        title: "Panels"
+                        SField {
+                            label: "Panel background"
+                            isColor: true
+                            value: String(Config.panelBg)
+                            onCommitted: v => Config.panelBg = v
+                        }
                     }
                 }
 
                 // ── WIDGETS (zones follow bar orientation) ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: 10
                     visible: root.tab === "widgets"
 
                     Repeater {
                         model: ["left", "center", "right"]
-                        delegate: ColumnLayout {
+                        delegate: SSection {
                             id: zcol
                             required property string modelData
-                            Layout.fillWidth: true
-                            spacing: 4
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Layout.topMargin: 6
-                                spacing: 8
-
-                                SLbl {
-                                    text: Config.zoneLabel(zcol.modelData) + " ZONE"
-                                }
-                                Item {
-                                    Layout.fillWidth: true
-                                }
-                                SChip {
-                                    label: "+ spacer"
-                                    implicitWidth: 84
-                                    onActivated: Config.addSpacer(zcol.modelData)
-                                }
-                            }
-
                             readonly property var list: modelData === "left" ? Config.leftWidgets : (modelData === "center" ? Config.centerWidgets : Config.rightWidgets)
+                            title: Config.zoneLabel(modelData) + " zone"
 
                             Repeater {
                                 model: zcol.list
@@ -476,6 +449,12 @@ Item {
                                 font.pixelSize: 12
                                 Layout.leftMargin: 4
                             }
+
+                            SChip {
+                                label: "+ spacer"
+                                implicitWidth: 84
+                                onActivated: Config.addSpacer(zcol.modelData)
+                            }
                         }
                     }
                 }
@@ -483,34 +462,28 @@ Item {
                 // ── PANELS ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
                     visible: root.tab === "panels"
 
-                    SToggle {
-                        label: "Auto-size height"
-                        value: Config.panelsAutoSize
-                        onToggled: v => {
-                            Config.panelsAutoSize = v;
-                            Config.save();
+                    SSection {
+                        title: "General"
+                        SToggle {
+                            label: "Auto-size height"
+                            value: Config.panelsAutoSize
+                            onToggled: v => {
+                                Config.panelsAutoSize = v;
+                                Config.save();
+                            }
                         }
                     }
 
                     Repeater {
-                        model: ["media", "bluetooth", "wifi", "notifications", "power", "brightness", "volume", "settings"]
-                        delegate: ColumnLayout {
+                        model: ["media", "bluetooth", "wifi", "notifications", "power", "brightness", "volume", "sysmon", "settings"]
+                        delegate: SSection {
                             id: pcol
                             required property string modelData
-                            Layout.fillWidth: true
-                            spacing: 4
+                            title: modelData
 
-                            Text {
-                                text: pcol.modelData
-                                color: Config.fgColor
-                                font.family: Config.fontFamily
-                                font.pixelSize: 13
-                                font.bold: true
-                                font.capitalization: Font.Capitalize
-                            }
                             SSlider {
                                 label: "Width"
                                 from: 240
@@ -531,92 +504,142 @@ Item {
                     }
                 }
 
-                // ── FORMAT ──
+                // ── FORMAT (one section per widget) ──
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
                     visible: root.tab === "format"
 
-                    SField {
-                        label: "Clock format"
-                        value: Config.clockFormat
-                        onCommitted: v => Config.clockFormat = v
-                    }
-                    SField {
-                        label: "Date format"
-                        value: Config.dateFormat
-                        onCommitted: v => Config.dateFormat = v
-                    }
-                    SField {
-                        label: "Date locale"
-                        value: Config.dateLocale
-                        onCommitted: v => Config.dateLocale = v
-                    }
-                    SToggle {
-                        label: "Show date"
-                        value: Config.showDate
-                        onToggled: v => Config.showDate = v
-                    }
-                    SSlider {
-                        label: "Workspace count"
-                        from: 1
-                        to: 20
-                        value: Config.workspaceCount
-                        onMoved: v => Config.workspaceCount = Math.round(v)
-                    }
-                    RowLayout {
-                        spacing: 6
-                        SLbl {
-                            text: "Volume display"
+                    SSection {
+                        title: "Clock"
+                        SField {
+                            label: "Clock format"
+                            value: Config.clockFormat
+                            onCommitted: v => Config.clockFormat = v
                         }
-                        Repeater {
-                            model: ["icon", "percent", "both"]
-                            delegate: SChip {
-                                required property string modelData
-                                label: modelData
-                                sel: Config.volumeIconMode === modelData
-                                onActivated: Config.volumeIconMode = modelData
-                            }
+                        SField {
+                            label: "Date format"
+                            value: Config.dateFormat
+                            onCommitted: v => Config.dateFormat = v
+                        }
+                        SField {
+                            label: "Date locale"
+                            value: Config.dateLocale
+                            onCommitted: v => Config.dateLocale = v
+                        }
+                        SToggle {
+                            label: "Show date"
+                            value: Config.showDate
+                            onToggled: v => Config.showDate = v
                         }
                     }
-                    SSlider {
-                        label: "Media title chars"
-                        from: 5
-                        to: 100
-                        value: Config.mediaTitleMax
-                        onMoved: v => Config.mediaTitleMax = Math.round(v)
+
+                    SSection {
+                        title: "Workspaces"
+                        SSlider {
+                            label: "Workspace count"
+                            from: 1
+                            to: 20
+                            value: Config.workspaceCount
+                            onMoved: v => Config.workspaceCount = Math.round(v)
+                        }
                     }
 
-                    SLbl {
-                        text: "SYSTEM STATS"
-                        Layout.topMargin: 8
+                    SSection {
+                        title: "Media"
+                        SToggle {
+                            label: "Cava visualizer"
+                            value: Config.mediaCava
+                            onToggled: v => Config.mediaCava = v
+                        }
+                        SSlider {
+                            label: "Media title chars"
+                            from: 5
+                            to: 100
+                            value: Config.mediaTitleMax
+                            onMoved: v => Config.mediaTitleMax = Math.round(v)
+                        }
                     }
 
-                    Repeater {
-                        model: root.statWidgets
-                        delegate: RowLayout {
-                            id: statRow
-                            required property var modelData
-                            readonly property string wkey: modelData.key
+                    SSection {
+                        title: "Volume"
+                        RowLayout {
                             spacing: 6
-                            Layout.fillWidth: true
-
                             SLbl {
-                                text: statRow.modelData.label
+                                text: "Volume display"
                             }
                             Repeater {
-                                model: root.statFormats
+                                model: ["icon", "percent", "both"]
                                 delegate: SChip {
-                                    required property var modelData
-                                    implicitWidth: 80
-                                    label: modelData.label
-                                    sel: root.statFormat(statRow.wkey) === modelData.key
-                                    onActivated: root.setStatFormat(statRow.wkey, modelData.key)
+                                    required property string modelData
+                                    label: modelData
+                                    sel: Config.volumeIconMode === modelData
+                                    onActivated: Config.volumeIconMode = modelData
                                 }
                             }
-                            Item {
+                        }
+                    }
+
+                    SSection {
+                        title: "System stats"
+                        Repeater {
+                            model: root.statWidgets
+                            delegate: RowLayout {
+                                id: statRow
+                                required property var modelData
+                                readonly property string wkey: modelData.key
+                                spacing: 6
                                 Layout.fillWidth: true
+
+                                SLbl {
+                                    text: statRow.modelData.label
+                                }
+                                Repeater {
+                                    model: root.statFormats
+                                    delegate: SChip {
+                                        required property var modelData
+                                        implicitWidth: 80
+                                        label: modelData.label
+                                        sel: root.statFormat(statRow.wkey) === modelData.key
+                                        onActivated: root.setStatFormat(statRow.wkey, modelData.key)
+                                    }
+                                }
+                                Item {
+                                    Layout.fillWidth: true
+                                }
                             }
+                        }
+                    }
+
+                    SSection {
+                        title: "Settings icon"
+                        SSlider {
+                            label: "Settings icon size"
+                            from: 10
+                            to: 60
+                            suffix: "px"
+                            value: Config.settingsIconSize
+                            onMoved: v => Config.settingsIconSize = Math.round(v)
+                        }
+                        RowLayout {
+                            spacing: 6
+                            SLbl {
+                                text: "Settings icon"
+                            }
+                            Repeater {
+                                model: ["", "", "", "", ""]
+                                delegate: SIconBtn {
+                                    required property string modelData
+                                    glyph: modelData
+                                    active: Config.settingsIcon === modelData
+                                    onActivated: Config.settingsIcon = modelData
+                                }
+                            }
+                        }
+                        SField {
+                            label: "Icon glyph / hex"
+                            value: Config.settingsIcon
+                            onCommitted: v => Config.settingsIcon = root.parseGlyph(v)
                         }
                     }
                 }

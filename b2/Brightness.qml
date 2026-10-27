@@ -20,15 +20,11 @@ Item {
 
     property int currentBrightness: 50
     property bool nightlightActive: false
-    property bool isOpen: false
 
     signal clicked
     signal rightClicked
 
     readonly property string icon: {
-        if (isOpen)
-            return Config.chevron;
-
         let step = Math.min(3, Math.floor(currentBrightness / 25.01));
         if (nightlightActive) {
             let moonIcons = ["󰽤", "󰽥", "󰽦", "󰽢"];
@@ -44,9 +40,9 @@ Item {
         text: brightnessWidgetRoot.icon
         color: brightnessWidgetRoot.nightlightActive ? brightnessWidgetRoot.accentColor : brightnessWidgetRoot.fgColor
         font.family: brightnessWidgetRoot.fontFamily
-        font.pixelSize: brightnessWidgetRoot.isOpen ? 22 : brightnessWidgetRoot.iconSize
+        font.pixelSize: brightnessWidgetRoot.iconSize
 
-        anchors.verticalCenterOffset: brightnessWidgetRoot.isOpen ? 0 : brightnessWidgetRoot.offsetY
+        anchors.verticalCenterOffset: brightnessWidgetRoot.offsetY
 
         Behavior on color {
             ColorAnimation {

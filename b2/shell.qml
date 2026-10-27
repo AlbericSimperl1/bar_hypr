@@ -2,16 +2,26 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 
 ShellRoot {
     id: root
 
+    // a click anywhere outside the bars/panels (any screen) closes the open panel
+    HyprlandFocusGrab {
+        active: BarState.panelOpen
+        windows: bars.instances.map(s => s.bar)
+        onCleared: BarState.close()
+    }
+
     Variants {
+        id: bars
         model: Quickshell.screens
 
         delegate: Scope {
             id: perScreen
             required property var modelData
+            readonly property var bar: win
 
             NotificationToast {
                 screen: perScreen.modelData
@@ -55,6 +65,8 @@ ShellRoot {
                         return brightnessPanel.neededHeight;
                     case "volume":
                         return volumePanel.neededHeight;
+                    case "sysmon":
+                        return sysmonPanel.neededHeight;
                     case "settings":
                         return Config.panelHeightFor("settings", 620);
                     }
@@ -175,6 +187,13 @@ ShellRoot {
                             cutTo: (win.horizontal ? win.panelX + win.panelW - win.barX : win.panelY + win.panelH - win.barY) - Config.borderWidth
                         }
 
+                        // empty bar space closes the panel; widgets sit on top and take their own clicks
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: BarState.panelOpen
+                            onClicked: BarState.close()
+                        }
+
                         Item {
                             anchors.fill: parent
                             anchors.leftMargin: win.horizontal ? Config.barInset : 0
@@ -268,6 +287,15 @@ ShellRoot {
                                 id: volumePanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "volume"
+                                fgColor: Config.fgColor
+                                accentColor: Config.accentColor
+                                fontFamily: Config.fontFamily
+                            }
+
+                            SysmonPanel {
+                                id: sysmonPanel
+                                anchors.fill: parent
+                                visible: BarState.activePanel === "sysmon"
                                 fgColor: Config.fgColor
                                 accentColor: Config.accentColor
                                 fontFamily: Config.fontFamily

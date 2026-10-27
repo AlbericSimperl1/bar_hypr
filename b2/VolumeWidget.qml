@@ -38,16 +38,16 @@ Item {
 
         // fixed 24px cells, centered, so icon and percent share one baseline like the other widgets
         Text {
-            visible: Config.volumeIconMode !== "percent" || root.isOpen
+            visible: Config.volumeIconMode !== "percent"
             height: 24
             verticalAlignment: Text.AlignVCenter
-            text: root.isOpen ? Config.chevron : root.icon
+            text: root.icon
             color: Config.fgColor
             font.family: Config.iconFont
-            font.pixelSize: Math.round((root.isOpen ? 22 : 24) * Config.iconScale)
+            font.pixelSize: Math.round(24 * Config.iconScale)
         }
         Text {
-            visible: Config.volumeIconMode !== "icon" && !root.isOpen
+            visible: Config.volumeIconMode !== "icon"
             height: 24
             verticalAlignment: Text.AlignVCenter
             text: root.pct + "%"
