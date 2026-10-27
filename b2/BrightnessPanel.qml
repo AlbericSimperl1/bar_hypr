@@ -15,29 +15,12 @@ Item {
 
     readonly property real neededHeight: 210
 
-    property int currentBrightness: 50
+    readonly property int currentBrightness: Math.max(0, Osd.brightness)
     property bool nightlightActive: false
     property bool scheduleActive: false
 
-    // Haalt initiële brightness percentage op via brightnessctl
-    Process {
-        id: brightnessProcess
-        command: ["sh", "-c", "brightnessctl -m | cut -d, -f4 | tr -d %"]
-        running: true
-        stdout: SplitParser {
-            onRead: line => {
-                let val = parseInt(line.trim());
-                if (!isNaN(val)) {
-                    brightnessPanelRoot.currentBrightness = val;
-                }
-            }
-        }
-    }
-
     function setBrightness(value) {
-        let clamped = Math.max(0, Math.min(100, Math.round(value)));
-        currentBrightness = clamped;
-        Quickshell.execDetached(["noctalia", "msg", "brightness-set", clamped.toString()]);
+        Osd.setBrightness(value);
     }
 
     function toggleForceNightlight() {

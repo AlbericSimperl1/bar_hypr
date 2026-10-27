@@ -63,12 +63,8 @@ Item {
         interval: 500
         repeat: true
         running: root.hasPlayer && root.visible
-        onTriggered: {
-            if (root.isPlaying && root.trackLength > 0)
-                root.trackPosition = Math.min(root.trackLength, root.trackPosition + 0.5);
-            else
-                root.syncPosition();
-        }
+        triggeredOnStart: true // direct juiste positie bij openen van het panel
+        onTriggered: root.syncPosition()
     }
 
     Connections {

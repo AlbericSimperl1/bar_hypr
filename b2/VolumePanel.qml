@@ -135,7 +135,7 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: current ? "󰓃" : "󰓄"
+                        text: Osd.sinkGlyph(modelData)
                         color: current ? root.accentColor : root.dimColor
                         font.family: root.fontFamily
                         font.pixelSize: 16

@@ -64,6 +64,13 @@ Singleton {
     property bool panelsAutoSize: true
     readonly property int panelWidthMax: 800
 
+    // ── Toasts ──
+    property int toastWidth: 340
+    property int toastMinHeight: 0       // 0 = zo hoog als de inhoud
+    property int toastAppFontSize: 17    // naam van de app / messenger
+    property int toastTitleFontSize: 20
+    property int toastBodyFontSize: 12   // de boodschap
+
     // ── Widget zones ──
     readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "disk", "battery", "power", "settings"]
     property var leftWidgets: ["clock"]
@@ -155,7 +162,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "mediaCava", "cpuFormat", "ramFormat", "gpuFormat", "diskFormat", "settingsIcon", "settingsIconSize"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "mediaCava", "cpuFormat", "ramFormat", "gpuFormat", "diskFormat", "settingsIcon", "settingsIconSize", "toastWidth", "toastMinHeight", "toastAppFontSize", "toastTitleFontSize", "toastBodyFontSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -351,6 +358,11 @@ Singleton {
     onDiskFormatChanged: saveTimer.restart()
     onSettingsIconChanged: saveTimer.restart()
     onSettingsIconSizeChanged: saveTimer.restart()
+    onToastWidthChanged: saveTimer.restart()
+    onToastMinHeightChanged: saveTimer.restart()
+    onToastAppFontSizeChanged: saveTimer.restart()
+    onToastTitleFontSizeChanged: saveTimer.restart()
+    onToastBodyFontSizeChanged: saveTimer.restart()
 
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p", root._dir]);

@@ -44,13 +44,19 @@ Singleton {
         const vol = sink.audio.volume || 0;
         const pct = Math.round(vol * 100);
         const muted = sink.audio.muted;
-        Notifications.osd("volume", volumeGlyph(pct, muted), "Volume", muted ? "Muted" : pct + "%", muted ? 0 : Math.min(1, vol), "");
+        Notifications.osd("volume", volumeGlyph(pct, muted), "", muted ? "Muted" : pct + "%", muted ? 0 : Math.min(1, vol), "");
+    }
+
+    // bluetooth-sinks hebben geen icon-name op de node, dus op naam herkennen
+    function sinkGlyph(n) {
+        const id = n ? ((n.name || "") + " " + (n.properties["device.icon-name"] || "")).toLowerCase() : "";
+        return id.includes("bluez") || id.includes("headset") || id.includes("headphone") ? "󰋋" : "󰓃";
     }
 
     onSinkChanged: {
         _sinkSwitchedAt = Date.now();
         if (ready && sink)
-            Notifications.osd("output", "󰓃", "Audio output", sink.description || sink.nickname || sink.name, -1, "");
+            Notifications.osd("output", sinkGlyph(sink), "Audio output", sink.description || sink.nickname || sink.name, -1, "");
     }
 
     Connections {
@@ -105,11 +111,13 @@ Singleton {
     }
 
     function setBrightness(v) {
-        if (brightness < 0)
+        if (brightness < 0) {
+            readBrightness.running = true;
             return;
+        }
         brightness = Math.max(0, Math.min(100, Math.round(v)));
         const glyph = ["󰃞", "󰃟", "󰃝", "󰃠"][Math.min(3, Math.floor(brightness / 25.01))];
-        Notifications.osd("brightness", glyph, "Brightness", brightness + "%", brightness / 100, "");
+        Notifications.osd("brightness", glyph, "", brightness + "%", brightness / 100, "");
         _target = brightness;
         if (!writeBrightness.running)
             _flushBrightness();

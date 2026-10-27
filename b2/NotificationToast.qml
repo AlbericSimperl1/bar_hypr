@@ -12,7 +12,7 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: 0
 
-    WlrLayershell.namespace: "quickshell:toast"
+    WlrLayershell.namespace: "quickshell"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
@@ -43,7 +43,7 @@ PanelWindow {
 
         Column {
             id: toastCol
-            width: 340
+            width: Config.toastWidth
             spacing: 8
 
             Repeater {
@@ -61,13 +61,16 @@ PanelWindow {
                     required property int timeout
                     required property int token
 
+                    // volume/brightness: icoon, slider, percentage op één rij
+                    readonly property bool slider: value >= 0
+
                     width: toastCol.width
-                    height: toastRow.implicitHeight + 24
+                    height: Math.max(Config.toastMinHeight, (slider ? osdRow : toastRow).implicitHeight + 24)
                     radius: 6
-                    // licht doorschijnend; Hyprland blurt erachter (layer_rule op namespace "quickshell")
-                    color: "#b3121210"
+                    // zelfde kleuren als de bar; Hyprland blurt erachter (layer_rule op namespace "quickshell")
+                    color: Config.barBg
                     border.width: 1
-                    border.color: "#2effffff"
+                    border.color: Config.borderColor
 
                     onTokenChanged: life.restart()
 
@@ -85,9 +88,65 @@ PanelWindow {
                     }
 
                     RowLayout {
+                        id: osdRow
+                        visible: toast.slider
+                        x: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 32
+                        spacing: 14
+
+                        Text {
+                            text: toast.glyph
+                            color: Config.fgColor
+                            font.family: "MesloLGL Nerd Font Propo"
+                            font.pixelSize: 38
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 4
+                            radius: 2
+                            color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.15)
+
+                            Rectangle {
+                                width: parent.width * Math.max(0, Math.min(1, toast.value))
+                                height: parent.height
+                                radius: 2
+                                color: Config.accentColor
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 90
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            // vaste breedte van "100%" zodat de slider niet verspringt
+                            Layout.minimumWidth: pctMetrics.width
+                            horizontalAlignment: Text.AlignRight
+                            text: toast.body
+                            color: Config.fgColor
+                            font.family: Config.fontFamily
+                            font.pixelSize: 24
+                            font.bold: true
+
+                            TextMetrics {
+                                id: pctMetrics
+                                text: "100%"
+                                font.family: Config.fontFamily
+                                font.pixelSize: 24
+                                font.bold: true
+                            }
+                        }
+                    }
+
+                    RowLayout {
                         id: toastRow
+                        visible: !toast.slider
                         x: 12
-                        y: 12
+                        anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 24
                         spacing: 10
 
@@ -115,8 +174,8 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 visible: toastImg.status !== Image.Ready
                                 text: toast.glyph !== "" ? toast.glyph : "\udb80\udc9a"
-                                color: "#fff7e5"
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                color: Config.fgColor
+                                font.family: "MesloLGL Nerd Font Propo"
                                 font.pixelSize: 40
                             }
                         }
@@ -129,9 +188,9 @@ PanelWindow {
                                 visible: toast.appName !== ""
                                 width: parent.width
                                 text: toast.appName
-                                color: "#b3fff7e5"
-                                font.family: "mononoki"
-                                font.pixelSize: 17
+                                color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.7)
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.toastAppFontSize
                                 elide: Text.ElideRight
                             }
 
@@ -139,9 +198,9 @@ PanelWindow {
                                 visible: toast.title !== ""
                                 width: parent.width
                                 text: toast.title
-                                color: "#fff7e5"
-                                font.family: "mononoki"
-                                font.pixelSize: 20
+                                color: Config.fgColor
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.toastTitleFontSize
                                 font.bold: true
                                 wrapMode: Text.Wrap
                                 maximumLineCount: 2
@@ -152,9 +211,9 @@ PanelWindow {
                                 visible: toast.body !== ""
                                 width: parent.width
                                 text: toast.body
-                                color: "#b3fff7e5"
-                                font.family: "mononoki"
-                                font.pixelSize: 12
+                                color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.7)
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.toastBodyFontSize
                                 wrapMode: Text.Wrap
                                 maximumLineCount: 3
                                 elide: Text.ElideRight
@@ -165,13 +224,13 @@ PanelWindow {
                                 width: parent.width
                                 height: 4
                                 radius: 2
-                                color: "#26fff7e5"
+                                color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.15)
 
                                 Rectangle {
                                     width: parent.width * Math.max(0, Math.min(1, toast.value))
                                     height: parent.height
                                     radius: 2
-                                    color: "#fff7e5"
+                                    color: Config.fgColor
 
                                     Behavior on width {
                                         NumberAnimation {

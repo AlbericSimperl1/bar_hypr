@@ -18,7 +18,7 @@ Item {
     property int iconSize: 29
     property int offsetY: -1
 
-    property int currentBrightness: 50
+    readonly property int currentBrightness: Math.max(0, Osd.brightness)
     property bool nightlightActive: false
 
     signal clicked
@@ -68,13 +68,8 @@ Item {
         }
 
         onWheel: wheel => {
-            if (wheel.angleDelta.y > 0) {
-                brightnessWidgetRoot.currentBrightness = Math.min(100, brightnessWidgetRoot.currentBrightness + 5);
-                Quickshell.execDetached(["noctalia", "msg", "brightness-up"]);
-            } else if (wheel.angleDelta.y < 0) {
-                brightnessWidgetRoot.currentBrightness = Math.max(0, brightnessWidgetRoot.currentBrightness - 5);
-                Quickshell.execDetached(["noctalia", "msg", "brightness-down"]);
-            }
+            if (wheel.angleDelta.y !== 0)
+                Osd.setBrightness(Osd.brightness + (wheel.angleDelta.y > 0 ? 5 : -5));
         }
     }
 }

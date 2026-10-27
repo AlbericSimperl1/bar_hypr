@@ -286,6 +286,50 @@ Item {
                             onMoved: v => Config.panelRadius = Math.round(v)
                         }
                     }
+
+                    SSection {
+                        title: "Toasts"
+                        SSlider {
+                            label: "Toast width"
+                            from: 240
+                            to: 800
+                            suffix: "px"
+                            value: Config.toastWidth
+                            onMoved: v => Config.toastWidth = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Toast min height"
+                            from: 0
+                            to: 300
+                            suffix: "px"
+                            value: Config.toastMinHeight
+                            onMoved: v => Config.toastMinHeight = Math.round(v)
+                        }
+                        SSlider {
+                            label: "App name size"
+                            from: 8
+                            to: 40
+                            suffix: "px"
+                            value: Config.toastAppFontSize
+                            onMoved: v => Config.toastAppFontSize = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Title size"
+                            from: 8
+                            to: 40
+                            suffix: "px"
+                            value: Config.toastTitleFontSize
+                            onMoved: v => Config.toastTitleFontSize = Math.round(v)
+                        }
+                        SSlider {
+                            label: "Message size"
+                            from: 8
+                            to: 40
+                            suffix: "px"
+                            value: Config.toastBodyFontSize
+                            onMoved: v => Config.toastBodyFontSize = Math.round(v)
+                        }
+                    }
                 }
 
                 // ── STYLE ──
