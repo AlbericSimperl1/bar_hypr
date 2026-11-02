@@ -73,7 +73,7 @@ Item {
         onWheel: wheel => {
             if (!root.audio) return;
             const step = wheel.angleDelta.y > 0 ? 0.05 : -0.05;
-            root.audio.volume = Math.max(0, Math.min(1.5, root.audio.volume + step));
+            root.audio.volume = Math.max(0, Math.min(2, root.audio.volume + step));
         }
     }
 }

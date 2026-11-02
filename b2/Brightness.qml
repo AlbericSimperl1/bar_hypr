@@ -62,7 +62,7 @@ Item {
                 brightnessWidgetRoot.clicked();
             } else if (mouse.button === Qt.RightButton) {
                 brightnessWidgetRoot.nightlightActive = !brightnessWidgetRoot.nightlightActive;
-                Quickshell.execDetached(["noctalia", "msg", "nightlight-force-toggle"]);
+                Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/nightlight.sh " + (brightnessWidgetRoot.nightlightActive ? "force" : "off")]);
                 brightnessWidgetRoot.rightClicked();
             }
         }

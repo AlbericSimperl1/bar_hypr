@@ -1,5 +1,5 @@
 local mainMod = "SUPER"
-local noctCall = "noctalia msg "
+local qsBar = "qs -p ~/bar_hypr/b2 ipc call bar toggle "
 local launchPrefix = "uwsm app -- "
 
 
@@ -23,7 +23,7 @@ hl.bind(mainMod .. " + Right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + Up", hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + Down", hl.dsp.focus({ direction = "down" }))
 hl.bind("ALT + Tab", hl.dsp.window.cycle_next())
-hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd(noctCall .. "window-switcher"))
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("rofi -show window"))
 
 -- Move active window around workspaces & monitors
 hl.bind(mainMod .. " + SHIFT + Up", hl.dsp.window.move({ direction = "u" }))
@@ -94,16 +94,16 @@ hl.bind("XF86Calculator", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR))
 hl.bind(mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(launchPrefix .. BROWSER))
 -- hl.bind(mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(helium))
 hl.bind("CONTROL + SHIFT + Escape", hl.dsp.exec_cmd(launchPrefix .. TERMINAL .. " -e btop"))
-hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(noctCall .. "settings-toggle"))
+hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(qsBar .. "settings"))
 
-hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(noctCall .. "panel-toggle control-center"))
+hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(qsBar .. "power"))
 -- hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("~/.config/hypr/scripts/rofi.sh"))
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher"))
 
-hl.bind(mainMod .. " + period", hl.dsp.exec_cmd(noctCall .. "panel-toggle launcher /emo"))
+hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("rofimoji --action copy"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("~/.config/hypr/scripts/lock.sh"))
-hl.bind(mainMod .. " + ALT + C", hl.dsp.exec_cmd(noctCall .. "panel-toggle session"))
-hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(noctCall .. "power-cycle"))
+hl.bind(mainMod .. " + ALT + C", hl.dsp.exec_cmd("wlogout"))
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd('case $(powerprofilesctl get) in power-saver) powerprofilesctl set balanced;; balanced) powerprofilesctl set performance || powerprofilesctl set power-saver;; *) powerprofilesctl set power-saver;; esac'))
 hl.bind("SUPER + G", hl.dsp.group.toggle(), { description = "Toggle window group" })
 
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("spotify"))
@@ -112,7 +112,7 @@ hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("spotify"))
 ---------------------------
 
 -- Audio
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 2.0 @DEFAULT_AUDIO_SINK@ 5%+"),
     { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
     { locked = true, repeating = true })
@@ -146,10 +146,10 @@ hl.bind("Print", hl.dsp.exec_cmd("/home/alberic/.local/bin/rishot"))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher --wallpaper"))
 
 -- Clipboard
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(noctCall .. "panel-toggle clipboard"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("/home/alberic/launcher/target/release/rust-launcher --clipboard"))
 
 -- Notifications
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(noctCall .. "panel-toggle control-center notifications"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(qsBar .. "notifications"))
 
 -------------------------------
 ---- WORKSPACES & MONITORS ----
@@ -184,7 +184,7 @@ hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special())
 
 
 hl.bind("SUPER + CONTROL + W", function() hl.plugin.hymission.stage_toggle() end)
-hl.bind("SUPER + W", hl.plugin.hymission.toggle)
+hl.bind("SUPER + W", function() hl.plugin.hymission.toggle() end)
 
 
 hl.bind(mainMod .. " + colon", hl.dsp.layout("move +col"))

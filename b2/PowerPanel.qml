@@ -16,7 +16,7 @@ Item {
     readonly property real neededHeight: 220
     property string currentProfile: "balanced"
 
-    // Haalt de initiële status op (als noctalia onder water powerprofilesctl gebruikt)
+    // Haalt de initiële status op
     Process {
         id: profileProcess
         command: ["powerprofilesctl", "get"]
@@ -30,7 +30,7 @@ Item {
     }
 
     function setProfile(profile) {
-        Quickshell.execDetached(["noctalia", "msg", "power-set", profile]);
+        Quickshell.execDetached(["powerprofilesctl", "set", profile]);
         currentProfile = profile;
     }
 
@@ -126,12 +126,12 @@ Item {
                     {
                         name: "Lock",
                         icon: "",
-                        cmd: ["noctalia", "msg", "session", "lock"]
+                        cmd: ["sh", "-c", "~/.config/hypr/scripts/lock.sh"]
                     },
                     {
                         name: "Logout",
                         icon: "󰍃",
-                        cmd: ["noctalia", "msg", "session", "logout"]
+                        cmd: ["uwsm", "stop"]
                     },
                     {
                         name: "Suspend",

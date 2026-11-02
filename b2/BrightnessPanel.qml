@@ -25,13 +25,12 @@ Item {
 
     function toggleForceNightlight() {
         nightlightActive = !nightlightActive;
-        Quickshell.execDetached(["noctalia", "msg", "nightlight-force-toggle"]);
+        Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/nightlight.sh " + (nightlightActive ? "force" : "off")]);
     }
 
     function toggleScheduleNightlight() {
         scheduleActive = !scheduleActive;
-        let cmd = scheduleActive ? "nightlight-enable" : "nightlight-disable";
-        Quickshell.execDetached(["noctalia", "msg", cmd]);
+        Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/nightlight.sh " + (scheduleActive ? "schedule" : "off")]);
     }
 
     ColumnLayout {

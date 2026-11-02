@@ -15,21 +15,11 @@ primary=$(awk '/^active_border_color/{sub("#","",$2); print $2}' "$theme" 2>/dev
 fg=$(awk '/^foreground/{sub("#","",$2); print $2}' "$theme" 2>/dev/null)
 err=$(awk '/^color1 /{sub("#","",$2); print $2}' "$theme" 2>/dev/null)
 
-weather=$(jq -r --slurpfile loc "$HOME/.cache/noctalia/location.json" '
-  .snapshot.current as $c
-  | ({"0":"Clear","1":"Mostly clear","2":"Partly cloudy","3":"Cloudy","45":"Fog","48":"Fog",
-      "51":"Drizzle","53":"Drizzle","55":"Drizzle","61":"Rain","63":"Rain","65":"Heavy rain",
-      "71":"Snow","73":"Snow","75":"Heavy snow","80":"Showers","81":"Showers","82":"Showers",
-      "95":"Thunderstorm","96":"Thunderstorm","99":"Thunderstorm"}[$c.weather_code|tostring] // "")
-  | "\($loc[0].name)  ·  \(.)  \($c.temperature_c|round)°C"' \
-  "$HOME/.cache/noctalia/weather.json" 2>/dev/null)
-
 cat > "$CACHE/vars.conf" <<EOF
 \$wallpaper = $wall
 \$primary = rgb(${primary:-98cbff})
 \$fg = rgb(${fg:-e0e2e8})
 \$error = rgb(${err:-ffb4ab})
-\$weather = $weather
 EOF
 
 exec hyprlock

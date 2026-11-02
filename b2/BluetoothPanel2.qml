@@ -191,16 +191,6 @@ Item {
             d.forget();
     }
 
-    function toggleAirpodsPanel() {
-        airpodsProcess.running = false;
-        airpodsProcess.running = true;
-    }
-
-    Process {
-        id: airpodsProcess
-        command: ["noctalia", "msg", "panel-toggle", "harveywuk/airpods:panel"]
-    }
-
     // ------------------------------------------------------------------
     // Wiring
     // ------------------------------------------------------------------
@@ -378,7 +368,6 @@ Item {
 
                         readonly property bool busy: d ? (root.connectingAddr === d.address || d.state === BluetoothDeviceState.Connecting || d.pairing === true) : false
                         readonly property bool failed: d ? root.failedAddr === d.address : false
-                        readonly property bool isAirpods: d ? root.labelOf(d).toLowerCase().indexOf("airpods") >= 0 : false
 
                         Layout.fillWidth: true
                         spacing: 0
@@ -418,15 +407,10 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: mouse => {
-                                    if (mouse.button === Qt.RightButton) {
-                                        if (entry.isAirpods)
-                                            root.toggleAirpodsPanel();
-                                    } else if (entry.d && !entry.d.connected && !entry.busy) {
+                                onClicked: {
+                                    if (entry.d && !entry.d.connected && !entry.busy)
                                         root.connectDevice(entry.d);
-                                    }
                                 }
                             }
 

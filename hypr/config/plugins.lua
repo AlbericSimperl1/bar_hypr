@@ -1,5 +1,4 @@
 local mainMod = "SUPER"
-local noctCall = "noctalia msg "
 local launchPrefix = "uwsm app -- "
 
 
@@ -16,33 +15,7 @@ local launchPrefix = "uwsm app -- "
 --     },
 -- })
 
-hl.config({
-    plugin = {
-        overview = {
-            panelColor = "rgba(0, 5, 8, 0.0)",
-            panelBorderColor = "rgba(49, 50, 68, 0.0)",
-            workspaceActiveBackground = "rgba(49, 50, 68, 0.8)",
-            workspaceActiveBorder = "rgba(255, 255, 255, 0.9)",
-            workspaceBorderSize = 4,
-            onBottom = true,
-            autoDrag = true,
-            showNewWorkspace = false,
-            vertical = true,
-            fitWindows = true,
-            scaleWorkspace = 1,
-            stageGap = 30,
-            stageMargin = 60,
-            stageBlur = true,
-            stageDim = "rgba(0, 5, 8, 0.2)",
-            stageRounding = 30,
-            showPanel = 1,
-            panelInStage = false,
-            panelHeight = 230,
-            workspaceMargin = 20
-            -- Add other overview settings here
-        }
-    }
-})
+-- )
 
 hl.config({
     plugin = {
@@ -63,15 +36,15 @@ hl.config({
             -- Optie A: natuurlijke indeling, vult lege ruimte beter
             layout_engine = "natural",
             natural_scale_flex = 0.25, -- max. toegestaan (standaard 0.22)
-            small_window_boost = 1.35, -- kleine vensters worden groter (standaard 1.35)
+            small_window_boost = 1.1, -- kleine vensters worden groter (standaard 1.35)
 
             -- Minder verloren ruimte
-            outer_padding_top = 40,
-            outer_padding_right = 40,
-            outer_padding_bottom = 40,
-            outer_padding_left = 40,
-            row_spacing = 16,
-            column_spacing = 16,
+            outer_padding_top = 50,
+            outer_padding_right = 50,
+            outer_padding_bottom = 50,
+            outer_padding_left = 50,
+            row_spacing = 26,
+            column_spacing = 56,
 
         },
     },
