@@ -1,25 +1,30 @@
 import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 
 Rectangle {
     id: chip
     property string label
     property bool sel: false
+    property bool on: false
     signal activated
-    implicitWidth: 70
-    implicitHeight: 28
-    radius: 3
-    color: sel ? Config.accentColor : (chipMa.containsMouse ? "#14ffffff" : "transparent")
-    border.color: "#20ffffff"
-    border.width: 1
+    readonly property bool tuiStop: true
+    readonly property string hint: label
+    function activate() {
+        activated();
+    }
+    border.color: Tui.isCursor(chip) ? Tui.accent : "transparent"
+    implicitWidth: chipText.implicitWidth + 12
+    implicitHeight: Tui.lineH
+    color: sel ? Tui.selBg : (chipMa.containsMouse ? "#14ffffff" : "transparent")
     Text {
+        id: chipText
         anchors.centerIn: parent
         text: chip.label
-        color: chip.sel ? "#14130e" : Config.fgColor
-        font.family: Config.fontFamily
-        font.pixelSize: 12
-        font.capitalization: Font.Capitalize
+        color: chip.sel ? Tui.selText : (!chip.enabled ? Tui.dim : (chip.on ? Tui.on : Tui.text))
+        font.family: Tui.family
+        font.pixelSize: Tui.size
+        font.bold: chip.sel
+        font.underline: Tui.isCursor(chip)
+        font.capitalization: Font.AllLowercase
     }
     MouseArea {
         id: chipMa

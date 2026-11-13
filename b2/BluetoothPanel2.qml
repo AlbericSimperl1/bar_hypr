@@ -7,15 +7,11 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
 
-Item {
+TuiPanel {
     id: root
 
-    property color fgColor: "#fff7e5"
-    property color accentColor: "#ebd9b9"
-    property color dimColor: "#66fff7e5"
-    property color lineColor: "#20ffffff"
-    property string fontFamily: "mononoki"
-    property string iconFont: "JetBrainsMono Nerd Font Mono"
+    mode: "bt"
+    total: powered ? deviceCount : 0
 
     // ------------------------------------------------------------------
     // State
@@ -23,27 +19,14 @@ Item {
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool powered: adapter ? adapter.enabled : false
 
-    property var entries: []
+    property var entries: []          // [{ title, kind, devs, base }], één pane per groep
+    property int deviceCount: 0
     property string _sig: ""
 
     property string connectingAddr: ""
     property string failedAddr: ""
     property bool sawConnecting: false
     property int retries: 0
-
-    // ------------------------------------------------------------------
-    // Height
-    // ------------------------------------------------------------------
-    readonly property real contentH: layoutRoot.anchors.margins * 2 + headerRow.implicitHeight + layoutRoot.spacing + mainColumn.implicitHeight
-    readonly property real neededHeight: Math.min(600, Math.max(150, contentH))
-
-    implicitHeight: neededHeight
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.OutCubic
-        }
-    }
 
     // ------------------------------------------------------------------
     // Helpers
@@ -57,10 +40,6 @@ Item {
         if (n === "")
             return false;
         return !/^([0-9a-f]{2}[-:]){5}[0-9a-f]{2}$/i.test(n);
-    }
-
-    function iconFor(d) {
-        return BtIcons.iconFor(d);
     }
 
     function scheduleRebuild() {
@@ -91,53 +70,26 @@ Item {
         avail.sort(byName);
 
         const out = [];
-        if (!powered) {
-            out.push({
-                type: "empty",
-                text: adapter ? "Bluetooth is off" : "No adapter found"
-            });
-        } else {
-            if (conn.length) {
+        if (powered) {
+            let base = 0;
+            const add = (title, kind, list) => {
                 out.push({
-                    type: "header",
-                    title: "Connected"
+                    title,
+                    kind,
+                    devs: list,
+                    base
                 });
-                conn.forEach(d => out.push({
-                        type: "device",
-                        kind: "connected",
-                        dev: d
-                    }));
-            }
-            if (known.length) {
-                out.push({
-                    type: "header",
-                    title: "Paired"
-                });
-                known.forEach(d => out.push({
-                        type: "device",
-                        kind: "known",
-                        dev: d
-                    }));
-            }
-            if (avail.length) {
-                out.push({
-                    type: "header",
-                    title: "Available"
-                });
-                avail.forEach(d => out.push({
-                        type: "device",
-                        kind: "available",
-                        dev: d
-                    }));
-            }
-            if (out.length === 0)
-                out.push({
-                    type: "empty",
-                    text: "Searching for devices..."
-                });
+                base += list.length;
+            };
+            if (conn.length)
+                add("connected", "connected", conn);
+            if (known.length)
+                add("paired", "known", known);
+            add("available", "available", avail);
+            deviceCount = base;
         }
 
-        const sig = out.map(e => e.type + (e.title || e.text || "") + (e.dev ? e.kind + e.dev.address : "")).join("|");
+        const sig = out.map(e => e.kind + e.devs.map(d => d.address).join(",")).join("|");
         if (sig !== _sig) {
             _sig = sig;
             entries = out;
@@ -304,223 +256,78 @@ Item {
     // ------------------------------------------------------------------
     // UI
     // ------------------------------------------------------------------
-    ColumnLayout {
-        id: layoutRoot
-        anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+    TuiPane {
+        title: "bluetooth"
 
-        RowLayout {
-            id: headerRow
-            Layout.fillWidth: true
-            spacing: 10
-
-            Text {
-                text: "Bluetooth"
-                color: root.fgColor
-                font.family: root.fontFamily
-                font.pixelSize: 24
-                font.bold: true
-                Layout.fillWidth: true
-            }
-
-            Text {
-                text: root.powered ? "Enabled" : "Disabled"
-                color: powerMa.containsMouse ? root.fgColor : (root.powered ? root.accentColor : root.dimColor)
-                font.family: root.fontFamily
-                font.pixelSize: 18
-
-                MouseArea {
-                    id: powerMa
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    onClicked: root.togglePower()
-                }
-            }
+        TuiLine {
+            text: (root.powered ? "[x]" : "[ ]") + " powered"
+            detail: root.powered ? "on" : "off"
+            detailColor: root.powered ? Tui.on : Tui.dim
+            hint: "toggle"
+            onClicked: root.togglePower()
         }
+        TuiLine {
+            visible: !root.powered
+            selectable: false
+            text: root.adapter ? "bluetooth is off" : "no adapter found"
+            textColor: Tui.dim
+        }
+    }
 
-        Flickable {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            clip: true
-            contentHeight: mainColumn.implicitHeight
-            interactive: true
-            boundsBehavior: Flickable.StopAtBounds
+    Repeater {
+        model: root.entries
 
-            ColumnLayout {
-                id: mainColumn
-                width: parent.width
-                spacing: 0
+        delegate: TuiPane {
+            id: group
+            required property var modelData
+            title: modelData.title
 
-                Repeater {
-                    model: root.entries
+            Repeater {
+                model: group.modelData.devs
 
-                    delegate: ColumnLayout {
-                        id: entry
-                        required property var modelData
+                delegate: TuiLine {
+                    id: device
+                    required property var modelData
+                    required property int index
+                    readonly property var d: modelData
+                    readonly property string kind: group.modelData.kind
+                    // d wordt null zodra BlueZ het apparaat weghaalt, nog voor de lijst is herbouwd
+                    readonly property bool busy: d ? (root.connectingAddr === d.address || d.state === BluetoothDeviceState.Connecting || d.pairing === true) : false
+                    readonly property bool failed: d ? root.failedAddr === d.address : false
 
-                        readonly property bool isHeader: modelData.type === "header"
-                        readonly property bool isEmpty: modelData.type === "empty"
-                        readonly property bool isDevice: modelData.type === "device"
-                        readonly property var d: isDevice ? modelData.dev : null
-                        readonly property string kind: isDevice ? modelData.kind : ""
+                    number: String(group.modelData.base + index + 1)
+                    text: d ? root.labelOf(d) : ""
+                    hint: kind === "connected" || busy ? "" : (kind === "available" ? "pair" : "connect")
+                    detail: busy ? "connecting…" : failed ? "failed" : d && d.batteryAvailable ? Math.round(d.battery * 100) + "%" : ""
+                    detailColor: failed && !busy ? Tui.danger : Tui.dim
+                    onClicked: {
+                        if (d && !d.connected && !busy)
+                            root.connectDevice(d);
+                    }
 
-                        readonly property bool busy: d ? (root.connectingAddr === d.address || d.state === BluetoothDeviceState.Connecting || d.pairing === true) : false
-                        readonly property bool failed: d ? root.failedAddr === d.address : false
-
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        // Section header
-                        Text {
-                            visible: entry.isHeader
-                            text: entry.isHeader ? entry.modelData.title : ""
-                            color: root.dimColor
-                            font.family: root.fontFamily
-                            font.pixelSize: 15
-                            font.capitalization: Font.AllUppercase
-                            Layout.fillWidth: true
-                            Layout.topMargin: 10
-                            Layout.bottomMargin: 8
-                        }
-
-                        // Empty / info text
-                        Text {
-                            visible: entry.isEmpty
-                            text: entry.isEmpty ? entry.modelData.text : ""
-                            color: root.dimColor
-                            font.family: root.fontFamily
-                            font.pixelSize: 18
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                            Layout.topMargin: 10
-                            Layout.bottomMargin: 10
-                        }
-
-                        // Device row
-                        Item {
-                            visible: entry.isDevice
-                            Layout.fillWidth: true
-                            implicitHeight: entry.isDevice ? devRow.implicitHeight + 18 : 0
-
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (entry.d && !entry.d.connected && !entry.busy)
-                                        root.connectDevice(entry.d);
-                                }
-                            }
-
-                            RowLayout {
-                                id: devRow
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 10
-
-                                Text {
-                                    text: entry.d ? root.iconFor(entry.d) : ""
-                                    color: entry.kind === "connected" ? root.accentColor : root.fgColor
-                                    font.family: root.iconFont
-                                    font.pixelSize: 22
-                                }
-
-                                Text {
-                                    text: entry.d ? root.labelOf(entry.d) : ""
-                                    color: root.fgColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 18
-                                    font.bold: entry.kind === "connected"
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-
-                                Text {
-                                    visible: entry.d && entry.d.batteryAvailable === true
-                                    text: entry.d && entry.d.batteryAvailable ? Math.round(entry.d.battery * 100) + "%" : ""
-                                    color: root.dimColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 15
-                                }
-
-                                Text {
-                                    visible: entry.busy
-                                    text: "Connecting..."
-                                    color: root.dimColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 16
-                                }
-
-                                Text {
-                                    visible: entry.failed && !entry.busy
-                                    text: "Failed"
-                                    color: "#ff5555"
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 16
-                                }
-
-                                Text {
-                                    visible: entry.kind === "connected"
-                                    text: "Disconnect"
-                                    color: discMa.containsMouse ? root.fgColor : root.dimColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 16
-
-                                    MouseArea {
-                                        id: discMa
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        hoverEnabled: true
-                                        onClicked: root.disconnectDevice(entry.d)
-                                    }
-                                }
-
-                                Text {
-                                    visible: entry.kind === "known"
-                                    text: "Forget"
-                                    color: forgetMa.containsMouse ? "#ff5555" : root.dimColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 16
-
-                                    MouseArea {
-                                        id: forgetMa
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        hoverEnabled: true
-                                        onClicked: root.forgetDevice(entry.d)
-                                    }
-                                }
-
-                                Text {
-                                    visible: (entry.kind === "known" || entry.kind === "available") && !entry.busy
-                                    text: entry.kind === "available" ? "Pair" : "Connect"
-                                    color: connMa.containsMouse ? root.fgColor : root.accentColor
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 16
-
-                                    MouseArea {
-                                        id: connMa
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        hoverEnabled: true
-                                        onClicked: root.connectDevice(entry.d)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Divider
-                        Rectangle {
-                            visible: entry.isDevice
-                            Layout.fillWidth: true
-                            height: 1
-                            color: root.lineColor
-                        }
+                    TuiAction {
+                        visible: device.kind === "connected"
+                        text: "disconnect"
+                        onClicked: root.disconnectDevice(device.d)
+                    }
+                    TuiAction {
+                        visible: device.kind !== "connected" && !device.busy
+                        text: device.kind === "available" ? "pair" : "connect"
+                        onClicked: root.connectDevice(device.d)
+                    }
+                    TuiAction {
+                        visible: device.kind === "known"
+                        text: "forget"
+                        onClicked: root.forgetDevice(device.d)
                     }
                 }
+            }
+
+            TuiLine {
+                visible: group.modelData.kind === "available" && root.adapter && root.adapter.discovering
+                selectable: false
+                text: "searching for devices…"
+                textColor: Tui.dim
             }
         }
     }

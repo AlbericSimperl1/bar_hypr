@@ -55,7 +55,7 @@ ShellRoot {
                 readonly property real contentH: {
                     switch (BarState.activePanel) {
                     case "media":
-                        return mediaPanel.implicitHeight;
+                        return mediaPanel.neededHeight;
                     case "bluetooth":
                         return bluetoothPanel.neededHeight;
                     case "wifi":
@@ -235,73 +235,48 @@ ShellRoot {
                                 id: mediaPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "media"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             BluetoothPanel2 {
                                 id: bluetoothPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "bluetooth"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             WifiPanel {
                                 id: wifiPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "wifi"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             NotificationPanel {
                                 id: notificationPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "notifications"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
-                                onCloseRequested: BarState.close()
                             }
 
                             PowerPanel {
                                 id: powerPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "power"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             BrightnessPanel {
                                 id: brightnessPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "brightness"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             VolumePanel {
                                 id: volumePanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "volume"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             SysmonPanel {
                                 id: sysmonPanel
                                 anchors.fill: parent
                                 visible: BarState.activePanel === "sysmon"
-                                fgColor: Config.fgColor
-                                accentColor: Config.accentColor
-                                fontFamily: Config.fontFamily
                             }
 
                             SettingsPanel {

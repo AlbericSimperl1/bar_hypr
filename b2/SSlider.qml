@@ -15,7 +15,18 @@ RowLayout {
     property real step: 1
     property string suffix: ""
     signal moved(real v)
+    readonly property bool tuiStop: true
+    readonly property string hint: "edit"
+    function adjust(d) {
+        nudge(d * step);
+    }
+    function activate() {
+        fld.forceActiveFocus();
+        fld.selectAll();
+    }
     Layout.fillWidth: true
+    Layout.leftMargin: 8
+    Layout.preferredHeight: Tui.lineH
     spacing: 8
     activeFocusOnTab: true
 
@@ -58,48 +69,25 @@ RowLayout {
 
     SLbl {
         text: sr.label
+        selected: Tui.isCursor(sr)
     }
 
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 10
-        color: "#15ffffff"
-        border.color: sr.activeFocus ? Config.accentColor : "#20ffffff"
-        border.width: 1
-        radius: 2
-        Rectangle {
-            width: parent.width * Math.max(0, Math.min(1, (sr.value - sr.from) / (sr.to - sr.from)))
-            height: parent.height
-            radius: 2
-            color: Config.accentColor
-        }
-        MouseArea {
-            anchors.fill: parent
-            anchors.topMargin: -6
-            anchors.bottomMargin: -6
-            cursorShape: Qt.PointingHandCursor
-            function apply(mx) {
-                sr.moved(sr.from + (sr.to - sr.from) * Math.max(0, Math.min(1, mx / width)));
-            }
-            onPressed: m => {
-                sr.forceActiveFocus();
-                apply(m.x);
-            }
-            onPositionChanged: m => {
-                if (pressed)
-                    apply(m.x);
-            }
-        }
+    TuiMeter {
+        from: sr.from
+        to: sr.to
+        value: sr.value
+        onTouched: sr.forceActiveFocus()
+        onMoved: v => sr.moved(v)
     }
 
     TextField {
         id: fld
         Layout.preferredWidth: 56
-        Layout.preferredHeight: 24
+        Layout.preferredHeight: Tui.lineH
         horizontalAlignment: Text.AlignRight
-        color: Config.fgColor
-        font.family: Config.fontFamily
-        font.pixelSize: 12
+        color: Tui.text
+        font.family: Tui.family
+        font.pixelSize: Tui.size
         selectByMouse: true
         inputMethodHints: Qt.ImhFormattedNumbersOnly
         validator: RegularExpressionValidator {
@@ -111,9 +99,6 @@ RowLayout {
         bottomPadding: 2
         background: Rectangle {
             color: fld.activeFocus ? "#18ffffff" : "transparent"
-            border.color: fld.activeFocus ? Config.accentColor : "#20ffffff"
-            border.width: 1
-            radius: 3
         }
 
         function sync() {
@@ -159,9 +144,9 @@ RowLayout {
     Text {
         visible: sr.suffix !== ""
         text: sr.suffix
-        color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
-        font.family: Config.fontFamily
-        font.pixelSize: 12
+        color: Tui.dim
+        font.family: Tui.family
+        font.pixelSize: Tui.statusSize
         Layout.preferredWidth: 20
     }
 }

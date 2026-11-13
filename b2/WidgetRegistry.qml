@@ -8,7 +8,9 @@ Singleton {
 
     readonly property var map: ({
             "clock": clockComp,
+            "date": dateComp,
             "ws": wsComp,
+            "window": windowComp,
             "media": mediaComp,
             "bluetooth": bluetoothComp,
             "wifi": wifiComp,
@@ -39,8 +41,16 @@ Singleton {
         Clock {}
     }
     Component {
+        id: dateComp
+        DateWidget {}
+    }
+    Component {
         id: wsComp
         Ws {}
+    }
+    Component {
+        id: windowComp
+        WindowWidget {}
     }
     Component {
         id: mediaComp
@@ -79,7 +89,7 @@ Singleton {
         id: brightnessComp
         Brightness {
             fontFamily: Config.iconFont
-            iconSize: Math.round(29 * Config.iconScale)
+            iconSize: Config.iconPx("brightness", 29)
             fgColor: Config.fgColor
             accentColor: Config.accentColor
             onClicked: {

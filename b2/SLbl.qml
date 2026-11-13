@@ -1,10 +1,20 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 
 Text {
-    color: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
-    font.family: Config.fontFamily
-    font.pixelSize: 12
-    Layout.preferredWidth: 140
+    id: lbl
+    property bool selected: false
+    color: selected ? Tui.selText : Tui.text
+    font.family: Tui.family
+    font.pixelSize: Tui.size
+    font.capitalization: Font.AllLowercase
+    elide: Text.ElideRight
+    Layout.preferredWidth: 172
+
+    Rectangle {
+        z: -1
+        visible: lbl.selected
+        anchors.fill: parent
+        color: Tui.selBg
+    }
 }

@@ -3,6 +3,7 @@ import QtQuick
 
 Item {
     id: ic
+    property string widgetName: ""   // set by Zone
     property string panel: ""
     property string glyph: ""
     property int size: 25
@@ -11,7 +12,7 @@ Item {
     signal rightClicked
 
     implicitWidth: Math.max(18, label.implicitWidth)
-    implicitHeight: 24
+    implicitHeight: Math.round(24 * Config.widgetScale(widgetName))
 
     Text {
         id: label
@@ -22,7 +23,7 @@ Item {
         text: ic.glyph
         color: Config.fgColor
         font.family: Config.iconFont
-        font.pixelSize: Math.round(ic.size * Config.iconScale)
+        font.pixelSize: Config.iconPx(ic.widgetName, ic.size)
     }
 
     Item {

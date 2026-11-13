@@ -38,22 +38,35 @@ Item {
 
         // fixed 24px cells, centered, so icon and percent share one baseline like the other widgets
         Text {
-            visible: Config.volumeIconMode !== "percent"
-            height: 24
+            visible: Config.volumeIconMode === "icon" || Config.volumeIconMode === "both"
+            height: Math.round(24 * Config.widgetScale("volume"))
             verticalAlignment: Text.AlignVCenter
             text: root.icon
             color: Config.fgColor
             font.family: Config.iconFont
-            font.pixelSize: Math.round(24 * Config.iconScale)
+            font.pixelSize: Config.iconPx("volume", 24)
         }
         Text {
-            visible: Config.volumeIconMode !== "icon"
-            height: 24
+            visible: Config.volumeIconMode === "percent" || Config.volumeIconMode === "both"
+            height: Math.round(24 * Config.widgetScale("volume"))
             verticalAlignment: Text.AlignVCenter
             text: root.pct + "%"
             color: Config.fgColor
             font.family: Config.fontFamily
-            font.pixelSize: Math.round(15 * Config.fontScale)
+            font.pixelSize: Config.fontPx("volume", 15)
+        }
+        // 24px across the bar so the thin pill stays easy to click and scroll on
+        Item {
+            visible: Config.volumeIconMode === "bar"
+            width: Config.vertical ? Math.max(24, volBar.implicitWidth) : volBar.implicitWidth
+            height: Config.vertical ? volBar.implicitHeight : Math.max(24, volBar.implicitHeight)
+            FillBar {
+                id: volBar
+                anchors.centerIn: parent
+                sizeScale: Config.widgetScale("volume")
+                value: root.muted ? 0 : root.vol
+                fillColor: !root.muted && root.pct > 100 ? "#e6c641" : Qt.rgba(1, 1, 1, 0.55)
+            }
         }
     }
 
@@ -73,7 +86,7 @@ Item {
         onWheel: wheel => {
             if (!root.audio) return;
             const step = wheel.angleDelta.y > 0 ? 0.05 : -0.05;
-            root.audio.volume = Math.max(0, Math.min(2, root.audio.volume + step));
+            root.audio.volume = Math.max(0, Math.min(1.5, root.audio.volume + step));
         }
     }
 }

@@ -1,4 +1,5 @@
 singleton Config Config.qml
+singleton Tui Tui.qml
 singleton BarState BarState.qml
 singleton WidgetRegistry WidgetRegistry.qml
 singleton Notifications Notifications.qml
@@ -13,6 +14,8 @@ BluetoothPanel2 BluetoothPanel2.qml
 Brightness Brightness.qml
 BrightnessPanel BrightnessPanel.qml
 Clock Clock.qml
+DateWidget DateWidget.qml
+FillBar FillBar.qml
 CpuWidget CpuWidget.qml
 RamWidget RamWidget.qml
 WifiDots WifiDots.qml
@@ -25,9 +28,9 @@ PowerPanel PowerPanel.qml
 SettingsPanel SettingsPanel.qml
 VolumeWidget VolumeWidget.qml
 VolumePanel VolumePanel.qml
-MediaBtn MediaBtn.qml
 WifiPanel WifiPanel.qml
 Ws Ws.qml
+WindowWidget WindowWidget.qml
 Zone Zone.qml
 SLbl SLbl.qml
 SChip SChip.qml
@@ -36,7 +39,6 @@ SToggle SToggle.qml
 SField SField.qml
 SIconBtn SIconBtn.qml
 SWidgetRow SWidgetRow.qml
-SSection SSection.qml
 Island Island.qml
 StatCell StatCell.qml
 GpuWidget GpuWidget.qml
@@ -44,3 +46,11 @@ DiskWidget DiskWidget.qml
 SysmonPanel SysmonPanel.qml
 Spacer Spacer.qml
 Border Border.qml
+TuiPanel TuiPanel.qml
+TuiPane TuiPane.qml
+TuiLine TuiLine.qml
+TuiAction TuiAction.qml
+TuiBars TuiBars.qml
+TuiMeter TuiMeter.qml
+TuiPrompt TuiPrompt.qml
+TuiTabs TuiTabs.qml

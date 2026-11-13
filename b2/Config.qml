@@ -72,8 +72,8 @@ Singleton {
     property int toastBodyFontSize: 12   // de boodschap
 
     // ── Widget zones ──
-    readonly property var allWidgets: ["ws", "clock", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "disk", "battery", "power", "settings"]
-    property var leftWidgets: ["clock"]
+    readonly property var allWidgets: ["ws", "window", "clock", "date", "media", "bluetooth", "wifi", "notifications", "brightness", "volume", "cpu", "ram", "gpu", "disk", "battery", "power", "settings"]
+    property var leftWidgets: ["clock", "date"]
     property var centerWidgets: ["ws"]
     property var rightWidgets: ["media", "bluetooth", "wifi", "notifications", "brightness", "power", "settings", "volume", "cpu", "ram", "gpu", "disk", "battery"]
     property var widgetDisabled: ({
@@ -89,12 +89,12 @@ Singleton {
     property string clockFormat: "HH.mm"
     property string dateFormat: "ddd d MMM"
     property string dateLocale: "nl_NL"
-    property bool showDate: true
     property int workspaceCount: 9
-    property bool workspaceShowNumbers: false
+    property string workspaceStyle: "pills"   // pills | numbers | box | underline
     property string volumeIconMode: "icon"   // icon | percent | both
     property int mediaTitleMax: 25
-    property bool mediaCava: false   // bar widget shows a cava spectrum instead of album art
+    property bool mediaArt: true
+    property bool mediaCava: false
 
     // stat widgets: percent | used | usedTotal | both
     property string cpuFormat: "percent"
@@ -105,6 +105,9 @@ Singleton {
     // ── Settings icon ──
     property string settingsIcon: "\uf1de"
     property int settingsIconSize: 22
+
+    // ── Size per widget (name -> percent, on top of the global font/icon size) ──
+    property var widgetSizes: ({})
 
     // ── Spacers (name "spacer-xxxx" -> width in px) ──
     property var spacerSizes: ({})
@@ -162,7 +165,7 @@ Singleton {
         onTriggered: root._save()
     }
 
-    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "showDate", "workspaceCount", "workspaceShowNumbers", "volumeIconMode", "mediaTitleMax", "mediaCava", "cpuFormat", "ramFormat", "gpuFormat", "diskFormat", "settingsIcon", "settingsIconSize", "toastWidth", "toastMinHeight", "toastAppFontSize", "toastTitleFontSize", "toastBodyFontSize"]
+    readonly property var _plainKeys: ["barPosition", "barHeight", "barMargin", "barRadius", "barInset", "barGap", "barSideMargin", "borderWidth", "borderUnderline", "widgetSpacing", "fontScalePct", "iconScalePct", "islandsEnabled", "islandPadding", "islandInset", "islandRadius", "fontFamily", "panelWidth", "panelMaxHeight", "panelMinHeight", "panelRadius", "panelsAutoSize", "clockFormat", "dateFormat", "dateLocale", "workspaceCount", "workspaceStyle", "volumeIconMode", "mediaTitleMax", "mediaArt", "mediaCava", "cpuFormat", "ramFormat", "gpuFormat", "diskFormat", "settingsIcon", "settingsIconSize", "toastWidth", "toastMinHeight", "toastAppFontSize", "toastTitleFontSize", "toastBodyFontSize"]
     readonly property var _colorKeys: ["barBg", "fgColor", "accentColor", "borderColor", "panelBg", "islandColor"]
 
     function _save() {
@@ -175,6 +178,7 @@ Singleton {
         data.widgetDisabled = widgetDisabled;
         data.panelSizes = panelSizes;
         data.spacerSizes = spacerSizes;
+        data.widgetSizes = widgetSizes;
         store.setText(JSON.stringify(data, null, 2));
     }
 
@@ -191,6 +195,8 @@ Singleton {
             if (data[k] !== undefined && data[k] !== null)
                 root[k] = data[k];
         });
+        if (data.workspaceShowNumbers && !data.workspaceStyle) // pre-workspaceStyle configs
+            workspaceStyle = "numbers";
         _colorKeys.forEach(k => {
             if (data[k])
                 root[k] = data[k];
@@ -207,6 +213,8 @@ Singleton {
             panelSizes = data.panelSizes;
         if (data.spacerSizes && typeof data.spacerSizes === "object")
             spacerSizes = data.spacerSizes;
+        if (data.widgetSizes && typeof data.widgetSizes === "object")
+            widgetSizes = data.widgetSizes;
         _ensureAllPlaced();
     }
 
@@ -279,6 +287,24 @@ Singleton {
             root[toZone + "Widgets"] = root[toZone + "Widgets"].concat([name]);
         save();
     }
+    // ── Size per widget ──
+    function widgetScale(name) {
+        const v = widgetSizes[name];
+        return v === undefined ? 1 : v / 100;
+    }
+    function setWidgetSize(name, pct) {
+        const d = Object.assign({}, widgetSizes);
+        d[name] = Math.max(50, Math.min(300, Math.round(pct)));
+        widgetSizes = d;
+        save();
+    }
+    function fontPx(name, base) {
+        return Math.round(base * fontScale * widgetScale(name));
+    }
+    function iconPx(name, base) {
+        return Math.round(base * iconScale * widgetScale(name));
+    }
+
     // ── Spacers ──
     function isSpacer(name) {
         return String(name).indexOf("spacer-") === 0;
@@ -346,11 +372,11 @@ Singleton {
     onClockFormatChanged: saveTimer.restart()
     onDateFormatChanged: saveTimer.restart()
     onDateLocaleChanged: saveTimer.restart()
-    onShowDateChanged: saveTimer.restart()
     onWorkspaceCountChanged: saveTimer.restart()
-    onWorkspaceShowNumbersChanged: saveTimer.restart()
+    onWorkspaceStyleChanged: saveTimer.restart()
     onVolumeIconModeChanged: saveTimer.restart()
     onMediaTitleMaxChanged: saveTimer.restart()
+    onMediaArtChanged: saveTimer.restart()
     onMediaCavaChanged: saveTimer.restart()
     onCpuFormatChanged: saveTimer.restart()
     onRamFormatChanged: saveTimer.restart()

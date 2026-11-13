@@ -9,6 +9,7 @@ Item {
     id: root
 
     readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
+    readonly property real s: Config.widgetScale("media")
 
     readonly property var player: {
         const ps = Mpris.players.values;
@@ -60,27 +61,12 @@ Item {
         rowSpacing: 8
 
         Item {
-            Layout.preferredWidth: 20
-            Layout.preferredHeight: 20
+            visible: Config.mediaArt
+            Layout.row: root.vertical ? 1 : 0
+            Layout.column: 0
+            Layout.preferredWidth: Math.round(20 * root.s)
+            Layout.preferredHeight: Math.round(20 * root.s)
             Layout.alignment: Qt.AlignVCenter
-
-            Row {
-                visible: Config.mediaCava
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 1.6
-                Repeater {
-                    model: 6
-                    delegate: Rectangle {
-                        required property int index
-                        anchors.bottom: parent.bottom
-                        width: 2
-                        height: Math.max(2, (root.bars[index] || 0) / 100 * 20)
-                        radius: 1
-                        color: Config.fgColor
-                    }
-                }
-            }
 
             Image {
                 id: art
@@ -100,25 +86,54 @@ Item {
                 anchors.fill: parent
                 source: art
                 maskSource: mask
-                visible: !Config.mediaCava && art.status === Image.Ready && root.artUrl !== ""
+                visible: art.status === Image.Ready && root.artUrl !== ""
             }
             Text {
                 anchors.centerIn: parent
-                visible: !Config.mediaCava && (art.status !== Image.Ready || root.artUrl === "")
+                visible: art.status !== Image.Ready || root.artUrl === ""
                 text: "󰎈"
                 color: Config.fgColor
                 font.family: Config.iconFont
-                font.pixelSize: 26
+                font.pixelSize: Math.round(26 * root.s)
+            }
+        }
+
+        Item {
+            visible: Config.mediaCava
+            // vertical: bars above the art; horizontal: art, bars, title
+            Layout.row: 0
+            Layout.column: root.vertical ? 0 : 1
+            Layout.preferredWidth: Math.round(20 * root.s)
+            Layout.preferredHeight: Math.round(20 * root.s)
+            Layout.alignment: Qt.AlignVCenter
+
+            Row {
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 1.6 * root.s
+                Repeater {
+                    model: 6
+                    delegate: Rectangle {
+                        required property int index
+                        anchors.bottom: parent.bottom
+                        width: 2 * root.s
+                        height: Math.max(2, (root.bars[index] || 0) / 100 * 20 * root.s)
+                        radius: 1
+                        color: Config.fgColor
+                    }
+                }
             }
         }
 
         Text {
             visible: !root.vertical && root.combo !== ""
+            Layout.row: 0
+            Layout.column: 2
             Layout.alignment: Qt.AlignVCenter
             text: root.combo
             color: Config.fgColor
             font.family: Config.fontFamily
-            font.pixelSize: Math.round(14 * Config.fontScale)
+            font.pixelSize: Config.fontPx("media", 14)
             elide: Text.ElideRight
         }
     }

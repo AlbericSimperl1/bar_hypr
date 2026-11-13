@@ -8,32 +8,40 @@ RowLayout {
     property string value
     property bool isColor: false
     signal committed(string v)
+    readonly property bool tuiStop: true
+    readonly property string hint: "edit"
+    function activate() {
+        fld.forceActiveFocus();
+    }
     Layout.fillWidth: true
+    Layout.leftMargin: 8
+    Layout.preferredHeight: Tui.lineH
     spacing: 8
     SLbl {
         text: fr.label
+        selected: Tui.isCursor(fr)
     }
     Rectangle {
         visible: fr.isColor
-        Layout.preferredWidth: 24
-        Layout.preferredHeight: 24
-        radius: 3
+        Layout.preferredWidth: 20
+        Layout.preferredHeight: 16
         color: fr.isColor ? fr.value : "transparent"
-        border.color: "#20ffffff"
+        border.color: Tui.rule
         border.width: 1
     }
     TextField {
+        id: fld
         Layout.fillWidth: true
+        Layout.preferredHeight: Tui.lineH
+        padding: 0
+        leftPadding: 4
         text: fr.value
-        color: Config.fgColor
-        font.family: Config.fontFamily
-        font.pixelSize: 12
+        color: Tui.text
+        font.family: Tui.family
+        font.pixelSize: Tui.size
         selectByMouse: true
         background: Rectangle {
-            color: "transparent"
-            border.color: "#20ffffff"
-            border.width: 1
-            radius: 3
+            color: fld.activeFocus ? "#18ffffff" : "transparent"
         }
         onEditingFinished: {
             if (!fr.isColor || /^#[0-9a-fA-F]{6,8}$/.test(text))

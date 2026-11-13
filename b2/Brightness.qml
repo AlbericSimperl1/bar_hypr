@@ -6,8 +6,8 @@ import Quickshell
 Item {
     id: brightnessWidgetRoot
 
-    implicitWidth: 24
-    implicitHeight: 24
+    implicitWidth: Math.round(24 * Config.widgetScale("brightness"))
+    implicitHeight: implicitWidth
     Layout.preferredWidth: 18
     Layout.preferredHeight: 24
     Layout.alignment: Qt.AlignVCenter

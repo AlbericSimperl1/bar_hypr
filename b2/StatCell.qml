@@ -6,6 +6,7 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property string widgetName: ""   // set by Zone
     property string shortLabel: "C"
     property string longLabel: "cpu"
     required property var stat
@@ -50,7 +51,7 @@ Item {
 
     readonly property bool vertical: Config.barPosition === "left" || Config.barPosition === "right"
     readonly property color dim: Qt.rgba(Config.fgColor.r, Config.fgColor.g, Config.fgColor.b, 0.6)
-    readonly property int fs: Math.round((vertical ? 12 : 15) * Config.fontScale)
+    readonly property int fs: Config.fontPx(widgetName, vertical ? 12 : 15)
 
     implicitWidth: grid.implicitWidth
     implicitHeight: vertical ? grid.implicitHeight : Math.max(24, grid.implicitHeight)

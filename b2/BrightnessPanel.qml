@@ -1,27 +1,17 @@
 // quickshell/modules/panels/BrightnessPanel.qml
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 
-Item {
+TuiPanel {
     id: brightnessPanelRoot
 
-    property color fgColor: "#fff7e5"
-    property color accentColor: "#ebd9b9"
-    property color dimColor: "#66fff7e5"
-    property color lineColor: "#20ffffff"
-    property string fontFamily: "JetBrainsMono Nerd Font Mono"
-
-    readonly property real neededHeight: 210
+    mode: "light"
+    total: 2
 
     readonly property int currentBrightness: Math.max(0, Osd.brightness)
     property bool nightlightActive: false
     property bool scheduleActive: false
-
-    function setBrightness(value) {
-        Osd.setBrightness(value);
-    }
 
     function toggleForceNightlight() {
         nightlightActive = !nightlightActive;
@@ -33,184 +23,38 @@ Item {
         Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/nightlight.sh " + (scheduleActive ? "schedule" : "off")]);
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+    TuiPane {
+        title: "brightness"
 
-        // --- TITLE ---
-        Text {
-            text: "Display & Night Light"
-            color: brightnessPanelRoot.fgColor
-            font.family: brightnessPanelRoot.fontFamily
-            font.pixelSize: 22
-            font.bold: true
-            Layout.fillWidth: true
+        TuiMeter {
+            Layout.leftMargin: 40
+            from: 0
+            to: 100
+            value: brightnessPanelRoot.currentBrightness
+            wheelStep: 5
+            label: brightnessPanelRoot.currentBrightness + "%"
+            onMoved: v => Osd.setBrightness(v)
         }
+    }
 
-        // --- BRIGHTNESS SLIDER ---
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 8
+    TuiPane {
+        title: "night light"
 
-            RowLayout {
-                Layout.fillWidth: true
-
-                Text {
-                    text: "󰃠"
-                    color: brightnessPanelRoot.accentColor
-                    font.family: brightnessPanelRoot.fontFamily
-                    font.pixelSize: 18
-                }
-
-                Text {
-                    text: "Helderheid"
-                    color: brightnessPanelRoot.fgColor
-                    font.family: brightnessPanelRoot.fontFamily
-                    font.pixelSize: 14
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    text: brightnessPanelRoot.currentBrightness + "%"
-                    color: brightnessPanelRoot.dimColor
-                    font.family: brightnessPanelRoot.fontFamily
-                    font.pixelSize: 14
-                }
-            }
-
-            // Custom Slider Track
-            Rectangle {
-                id: sliderTrack
-                Layout.fillWidth: true
-                height: 12
-                color: "#15ffffff"
-                border.color: brightnessPanelRoot.lineColor
-                border.width: 1
-
-                Rectangle {
-                    width: parent.width * (brightnessPanelRoot.currentBrightness / 100.0)
-                    height: parent.height
-                    color: brightnessPanelRoot.accentColor
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-
-                    function updateFromMouse(mouse) {
-                        let pct = Math.max(0, Math.min(1, mouse.x / width));
-                        brightnessPanelRoot.setBrightness(pct * 100);
-                    }
-
-                    onPressed: mouse => updateFromMouse(mouse)
-                    onPositionChanged: mouse => {
-                        if (pressed)
-                            updateFromMouse(mouse);
-                    }
-                    onWheel: wheel => {
-                        let step = wheel.angleDelta.y > 0 ? 5 : -5;
-                        brightnessPanelRoot.setBrightness(brightnessPanelRoot.currentBrightness + step);
-                    }
-                }
-            }
+        TuiLine {
+            number: "1"
+            text: (brightnessPanelRoot.nightlightActive ? "[x]" : "[ ]") + " forced"
+            detail: brightnessPanelRoot.nightlightActive ? "on" : "off"
+            detailColor: brightnessPanelRoot.nightlightActive ? Tui.on : Tui.dim
+            hint: "toggle"
+            onClicked: brightnessPanelRoot.toggleForceNightlight()
         }
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: brightnessPanelRoot.lineColor
-            Layout.topMargin: 4
-            Layout.bottomMargin: 4
-        }
-
-        // --- NIGHT LIGHT CONTROLS ---
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            Text {
-                text: "Night Light"
-                color: brightnessPanelRoot.dimColor
-                font.family: brightnessPanelRoot.fontFamily
-                font.pixelSize: 12
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-
-                // 1. FORCE TOGGLE (Handmatige override)
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 46
-                    radius: 0
-                    color: brightnessPanelRoot.nightlightActive ? "#33ffffff" : "transparent"
-                    border.color: brightnessPanelRoot.nightlightActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.lineColor
-                    border.width: 1
-
-                    RowLayout {
-                        anchors.centerIn: parent
-                        spacing: 8
-
-                        Text {
-                            text: brightnessPanelRoot.nightlightActive ? "󰽥" : "󰃞"
-                            color: brightnessPanelRoot.nightlightActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.fgColor
-                            font.family: brightnessPanelRoot.fontFamily
-                            font.pixelSize: 20
-                        }
-
-                        Text {
-                            text: brightnessPanelRoot.nightlightActive ? "Forced On" : "Forced Off"
-                            color: brightnessPanelRoot.nightlightActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.fgColor
-                            font.family: brightnessPanelRoot.fontFamily
-                            font.pixelSize: 13
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: brightnessPanelRoot.toggleForceNightlight()
-                    }
-                }
-
-                // 2. SCHEDULE TOGGLE (nightlight-enable vs nightlight-disable)
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 46
-                    radius: 0
-                    color: brightnessPanelRoot.scheduleActive ? "#33ffffff" : "transparent"
-                    border.color: brightnessPanelRoot.scheduleActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.lineColor
-                    border.width: 1
-
-                    RowLayout {
-                        anchors.centerIn: parent
-                        spacing: 8
-
-                        Text {
-                            text: "󰔚"
-                            color: brightnessPanelRoot.scheduleActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.fgColor
-                            font.family: brightnessPanelRoot.fontFamily
-                            font.pixelSize: 20
-                        }
-
-                        Text {
-                            text: brightnessPanelRoot.scheduleActive ? "Schedule On" : "Schedule Off"
-                            color: brightnessPanelRoot.scheduleActive ? brightnessPanelRoot.accentColor : brightnessPanelRoot.fgColor
-                            font.family: brightnessPanelRoot.fontFamily
-                            font.pixelSize: 13
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: brightnessPanelRoot.toggleScheduleNightlight()
-                    }
-                }
-            }
+        TuiLine {
+            number: "2"
+            text: (brightnessPanelRoot.scheduleActive ? "[x]" : "[ ]") + " schedule"
+            detail: brightnessPanelRoot.scheduleActive ? "on" : "off"
+            detailColor: brightnessPanelRoot.scheduleActive ? Tui.on : Tui.dim
+            hint: "toggle"
+            onClicked: brightnessPanelRoot.toggleScheduleNightlight()
         }
     }
 }

@@ -1,18 +1,15 @@
-// MediaPanel.qml - album art left; title, artist and controls centred right; thin progress line along the bottom
+// MediaPanel.qml - album art and track info, a seek meter, and the controls as a row of words
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Mpris
 
-Item {
+TuiPanel {
     id: root
 
-    property color fgColor: "#fff7e5"
-    property color accentColor: "#ebd9b9"
-    property color dimColor: Qt.rgba(fgColor.r, fgColor.g, fgColor.b, 0.6)
-    property string fontFamily: "mononoki"
+    mode: "media"
+    hint: !hasPlayer ? "" : isPlaying ? "playing" : "paused"
 
-    readonly property int artSize: 170
-    implicitHeight: artSize + 40
+    readonly property int artSize: 96
 
     readonly property var ignoredPlayers: ["zen-browser", "firefox", "youtube"]
 
@@ -37,8 +34,6 @@ Item {
     readonly property bool hasPlayer: activePlayer !== null
     readonly property bool isPlaying: hasPlayer && activePlayer.isPlaying
     readonly property bool canControl: hasPlayer && activePlayer.canControl
-    readonly property string trackTitle: hasPlayer && activePlayer.trackTitle ? activePlayer.trackTitle : "No media playing"
-    readonly property string trackArtist: hasPlayer && activePlayer.trackArtist ? activePlayer.trackArtist : ""
     readonly property string artUrl: hasPlayer && activePlayer.trackArtUrl ? activePlayer.trackArtUrl : ""
     readonly property real trackLength: hasPlayer && activePlayer.lengthSupported ? Math.max(0, activePlayer.length) : 0
     readonly property bool canSeek: hasPlayer && activePlayer.canSeek && trackLength > 0
@@ -78,174 +73,150 @@ Item {
         }
     }
 
-    RowLayout {
-        anchors.fill: parent
-        anchors.margins: 20
-        spacing: 20
+    TuiPane {
+        title: root.hasPlayer && root.activePlayer.identity ? root.activePlayer.identity : "media"
 
-        // album cover
-        Item {
-            Layout.preferredWidth: root.artSize
-            Layout.preferredHeight: root.artSize
-            Layout.alignment: Qt.AlignVCenter
-
-            Image {
-                id: albumArt
-                anchors.fill: parent
-                source: root.artUrl
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: status === Image.Ready && root.artUrl !== ""
-            }
-            Rectangle {
-                anchors.fill: parent
-                color: "#15ffffff"
-                border.color: "#20ffffff"
-                border.width: 1
-                visible: albumArt.status !== Image.Ready || root.artUrl === ""
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰎈"
-                    color: root.dimColor
-                    font.family: root.fontFamily
-                    font.pixelSize: 48
-                }
-            }
+        TuiLine {
+            visible: !root.hasPlayer
+            numbered: false
+            selectable: false
+            text: "no player"
+            textColor: Tui.dim
         }
 
         ColumnLayout {
+            visible: root.hasPlayer
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 4
+            Layout.margins: 4
+            spacing: 6
 
-            Text {
-                text: root.trackTitle
-                color: root.fgColor
-                font.family: root.fontFamily
-                font.pixelSize: 23
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
+            RowLayout {
                 Layout.fillWidth: true
-            }
-            Text {
-                text: root.trackArtist
-                visible: text !== ""
-                color: Qt.rgba(root.fgColor.r, root.fgColor.g, root.fgColor.b, 0.7)
-                font.family: root.fontFamily
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+                spacing: 12
+
+                // album cover
+                Item {
+                    Layout.preferredWidth: root.artSize
+                    Layout.preferredHeight: root.artSize
+
+                    Image {
+                        id: albumArt
+                        anchors.fill: parent
+                        source: root.artUrl
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: status === Image.Ready && root.artUrl !== ""
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        border.color: Tui.rule
+                        border.width: 1
+                        visible: !albumArt.visible
+                        Text {
+                            anchors.centerIn: parent
+                            text: "art"
+                            color: Tui.dim
+                            font.family: Tui.family
+                            font.pixelSize: Tui.size
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    spacing: 0
+
+                    Repeater {
+                        model: root.hasPlayer ? [root.activePlayer.trackTitle || "No media playing", root.activePlayer.trackArtist || "", root.activePlayer.trackAlbum || ""] : []
+                        delegate: Text {
+                            required property string modelData
+                            required property int index
+                            visible: modelData !== ""
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Tui.lineH
+                            verticalAlignment: Text.AlignVCenter
+                            text: modelData
+                            elide: Text.ElideRight
+                            color: index === 0 ? Tui.text : Tui.dim
+                            font.family: Tui.family
+                            font.pixelSize: Tui.size
+                            font.bold: index === 0
+                        }
+                    }
+                }
             }
 
             RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 14
-                spacing: 18
+                visible: root.trackLength > 0
+                Layout.fillWidth: true
+                spacing: 8
 
-                MediaBtn {
-                    player: root
-                    text: ""
-                    font.pixelSize: 28
-                    active: root.hasPlayer && root.activePlayer.shuffle
-                    enabledBtn: root.canControl && root.activePlayer.shuffleSupported
-                    opacity: enabledBtn ? (active ? 1 : 0.55) : 0.25
-                    onClicked: root.activePlayer.shuffle = !root.activePlayer.shuffle
+                Text {
+                    text: root.formatTime(root.trackPosition)
+                    color: Tui.dim
+                    font.family: Tui.family
+                    font.pixelSize: Tui.size
                 }
-                MediaBtn {
-                    player: root
-                    text: ""
-                    font.pixelSize: 36
-                    onClicked: root.activePlayer.previous()
-                }
-                // primary action: filled circle
-                Rectangle {
-                    implicitWidth: 50
-                    implicitHeight: 50
-                    radius: 25
-                    color: root.fgColor
-                    opacity: root.canControl ? 1 : 0.35
-                    MediaBtn {
-                        player: root
-                        anchors.centerIn: parent
-                        text: root.isPlaying ? "" : ""
-                        font.pixelSize: 40
-                        color: "#0b0d12"
-                        onClicked: root.activePlayer.togglePlaying()
+                TuiMeter {
+                    from: 0
+                    to: root.trackLength
+                    value: root.trackPosition
+                    interactive: root.canSeek
+                    onMoved: v => {
+                        root.activePlayer.position = v;
+                        root.syncPosition();
                     }
                 }
-                MediaBtn {
-                    player: root
-                    text: ""
-                    font.pixelSize: 36
-                    onClicked: root.activePlayer.next()
+                Text {
+                    text: root.formatTime(root.trackLength)
+                    color: Tui.dim
+                    font.family: Tui.family
+                    font.pixelSize: Tui.size
                 }
-                MediaBtn {
-                    player: root
-                    text: ""
-                    font.pixelSize: 28
-                    active: root.hasPlayer && root.activePlayer.loopState !== MprisLoopState.None
-                    enabledBtn: root.canControl && root.activePlayer.loopSupported
-                    opacity: enabledBtn ? (active ? 1 : 0.55) : 0.25
-                    onClicked: {
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+
+                SChip {
+                    Layout.fillWidth: true
+                    label: "shuf"
+                    on: root.hasPlayer && root.activePlayer.shuffle
+                    enabled: root.canControl && root.activePlayer.shuffleSupported
+                    onActivated: root.activePlayer.shuffle = !root.activePlayer.shuffle
+                }
+                SChip {
+                    Layout.fillWidth: true
+                    label: "prev"
+                    enabled: root.canControl
+                    onActivated: root.activePlayer.previous()
+                }
+                SChip {
+                    Layout.fillWidth: true
+                    label: root.isPlaying ? "pause" : "play"
+                    sel: true
+                    enabled: root.canControl
+                    onActivated: root.activePlayer.togglePlaying()
+                }
+                SChip {
+                    Layout.fillWidth: true
+                    label: "next"
+                    enabled: root.canControl
+                    onActivated: root.activePlayer.next()
+                }
+                SChip {
+                    Layout.fillWidth: true
+                    label: root.hasPlayer && root.activePlayer.loopState === MprisLoopState.Track ? "loop 1" : "loop"
+                    on: root.hasPlayer && root.activePlayer.loopState !== MprisLoopState.None
+                    enabled: root.canControl && root.activePlayer.loopSupported
+                    onActivated: {
                         const p = root.activePlayer;
                         p.loopState = p.loopState === MprisLoopState.None ? MprisLoopState.Playlist : p.loopState === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None;
                     }
-                    Text {
-                        text: "1"
-                        visible: root.hasPlayer && root.activePlayer.loopState === MprisLoopState.Track
-                        color: root.accentColor
-                        font.family: root.fontFamily
-                        font.pixelSize: 9
-                        font.bold: true
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.rightMargin: -5
-                    }
                 }
-            }
-        }
-    }
-
-    Text {
-        anchors.right: parent.right
-        anchors.bottom: progressBar.top
-        anchors.margins: 8
-        text: root.formatTime(root.trackPosition) + " / " + root.formatTime(root.trackLength)
-        visible: root.trackLength > 0
-        color: root.dimColor
-        font.family: root.fontFamily
-        font.pixelSize: 11
-    }
-
-    // thin progress line along the bottom edge
-    Rectangle {
-        id: progressBar
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        implicitHeight: seekArea.containsMouse ? 5 : 3
-        color: "#1fffffff"
-
-        Rectangle {
-            height: parent.height
-            width: root.trackLength > 0 ? parent.width * Math.min(1, root.trackPosition / root.trackLength) : 0
-            color: root.fgColor
-        }
-
-        MouseArea {
-            id: seekArea
-            anchors.fill: parent
-            anchors.topMargin: -10
-            enabled: root.canSeek
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: mouse => {
-                root.activePlayer.position = (mouse.x / width) * root.trackLength;
-                root.syncPosition();
             }
         }
     }
