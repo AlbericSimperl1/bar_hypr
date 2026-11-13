@@ -4,7 +4,7 @@ hl.config({
     input = {
         sensitivity = 0.645,
         accel_profile = "flat",
-        kb_layout = "be, kr",
+        kb_layout = "becustom, kr",
         kb_options = "",
         -- Change speed of keyboard repeat
         repeat_rate = 40,
